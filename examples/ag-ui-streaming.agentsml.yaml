@@ -1,0 +1,248 @@
+agentsml: "0.1"
+kind: AgentSystem
+metadata:
+  name: ag-ui-streaming-agent
+  version: "0.1.0"
+  description: >
+    Demonstrates AgentsML integration with the AG-UI protocol for live
+    streaming user interfaces. The agent streams message deltas, tool call
+    events, and state updates to a frontend application in real time.
+  tags:
+    - ag-ui
+    - streaming
+    - ui
+    - customer-support
+
+profiles:
+  required:
+    - agentsml-core
+    - agentsml-ui
+  optional:
+    - agentsml-mcp
+    - agentsml-observability
+
+models:
+  default:
+    provider: openai
+    name: gpt-4o
+    parameters:
+      temperature: 0.3
+
+tools:
+  get_order_status:
+    description: Retrieve the current status of a customer order.
+    source: local.function
+    input_schema:
+      type: object
+      required: [order_id]
+      properties:
+        order_id:
+          type: string
+          pattern: "^ORD-[0-9]{6}$"
+    output_schema:
+      type: object
+      required: [order_id, status, estimated_delivery]
+      properties:
+        order_id:
+          type: string
+        status:
+          type: string
+          enum: [processing, shipped, in_transit, delivered, cancelled]
+        estimated_delivery:
+          type: string
+          format: date
+        tracking_number:
+          type: string
+    side_effect: read
+    permissions:
+      approval: not_required
+
+  initiate_refund:
+    description: Initiate a refund for an order. Requires customer confirmation.
+    source: local.function
+    input_schema:
+      type: object
+      required: [order_id, reason]
+      properties:
+        order_id:
+          type: string
+        reason:
+          type: string
+          enum: [not_received, damaged, wrong_item, changed_mind]
+        refund_amount:
+          type: number
+          description: Amount to refund in USD. If omitted, full refund is issued.
+    output_schema:
+      type: object
+      required: [refund_id, status]
+      properties:
+        refund_id:
+          type: string
+        status:
+          type: string
+          enum: [initiated, pending_approval, completed, failed]
+        estimated_processing_days:
+          type: integer
+    side_effect: write
+    permissions:
+      approval: required_if_amount_above_100
+      scopes:
+        - orders:refund
+
+  update_shipping_address:
+    description: Update the shipping address for an order that has not yet shipped.
+    source: local.function
+    input_schema:
+      type: object
+      required: [order_id, new_address]
+      properties:
+        order_id:
+          type: string
+        new_address:
+          type: object
+          required: [street, city, state, zip, country]
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            zip:
+              type: string
+            country:
+              type: string
+    output_schema:
+      type: object
+      properties:
+        updated:
+          type: boolean
+        message:
+          type: string
+    side_effect: write
+    permissions:
+      approval: not_required
+
+# AG-UI streaming configuration (agentsml-ui profile)
+ui:
+  protocol: ag-ui
+  transport: sse
+  session_model: stateful
+  events:
+    emit:
+      - run.started
+      - run.finished
+      - run.error
+      - message.delta          # Stream LLM tokens in real time
+      - tool.call              # Show tool invocations to user
+      - tool.result            # Show tool results to user
+      - state.snapshot         # Full state on session start
+      - state.delta            # Incremental state changes (JSON Patch)
+      - human.input_required   # Pause for user input
+      - artifact.created       # Emit generated documents
+  state_schema:
+    type: object
+    properties:
+      customer_id:
+        type: string
+      active_order_ids:
+        type: array
+        items:
+          type: string
+      conversation_stage:
+        type: string
+        enum: [greeting, inquiry, resolution, follow_up, closed]
+      resolution_summary:
+        type: string
+
+agents:
+  support_agent:
+    description: Live customer support agent with AG-UI streaming capabilities.
+    model: default
+    instructions: |
+      You are a helpful customer support agent for an e-commerce platform.
+      You have access to order management tools. Always:
+      1. Greet the customer warmly and ask for their order ID if not provided.
+      2. Look up order status before making any recommendations.
+      3. For refunds above $100, explain that a brief confirmation step is required.
+      4. Be concise and empathetic. Keep responses focused on resolution.
+      5. Summarize what was resolved at the end of the conversation.
+    tools:
+      - get_order_status
+      - initiate_refund
+      - update_shipping_address
+    policies:
+      - support_policy
+    events:
+      emit:
+        - message.delta
+        - tool.call
+        - tool.result
+        - human.input_required
+
+policies:
+  support_policy:
+    description: Policy for customer support agent actions.
+    applies_to:
+      - agents.support_agent
+    permissions:
+      guardrails:
+        no_pii_in_logs: true
+        max_refund_without_approval: 100
+    audit:
+      log_tool_calls: true
+      log_approvals: true
+
+schemas:
+  support_session_input:
+    type: object
+    required: [customer_message]
+    properties:
+      customer_message:
+        type: string
+      customer_id:
+        type: string
+      session_id:
+        type: string
+      previous_state:
+        type: object
+        description: Optional restored state from previous AG-UI session snapshot.
+
+workflows:
+  support_session:
+    description: >
+      Single-turn customer support session with AG-UI streaming.
+      Each user message enters here; the agent responds with streamed tokens
+      and tool events visible to the frontend in real time.
+    input_schema:
+      $ref: "#/schemas/support_session_input"
+    output_schema:
+      type: object
+      required: [response, updated_state]
+      properties:
+        response:
+          type: string
+        updated_state:
+          $ref: "#/ui/state_schema"
+        resolution_achieved:
+          type: boolean
+    state:
+      schema:
+        $ref: "#/ui/state_schema"
+    steps:
+      - id: respond
+        agent: support_agent
+        input:
+          message: "{{workflow.input.customer_message}}"
+          customer_id: "{{workflow.input.customer_id}}"
+        output:
+          bind_to: workflow.output.response
+
+deployments:
+  local:
+    target: python
+    runtime: langgraph
+    observability:
+      tracing: langsmith
+      events:
+        export_format: ag-ui-sse

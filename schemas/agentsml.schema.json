@@ -89,6 +89,24 @@
     "deployments": {
       "type": "object",
       "additionalProperties": { "type": "object" }
+    },
+    "events": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "mcp_servers": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/mcp_server" }
+    },
+    "a2a_agents": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/a2a_agent" }
+    },
+    "a2a_server": {
+      "$ref": "#/$defs/a2a_server"
+    },
+    "ui": {
+      "$ref": "#/$defs/ui"
     }
   },
   "$defs": {
@@ -208,6 +226,8 @@
         "agent": { "type": "string" },
         "tool": { "type": "string" },
         "workflow": { "type": "string" },
+        "a2a_agent": { "type": "string" },
+        "skill": { "type": "string" },
         "input": {},
         "output": {},
         "condition": {},
@@ -244,6 +264,66 @@
         "guardrails": { "type": "object" },
         "approval": { "type": "object" },
         "audit": { "type": "object" }
+      }
+    },
+    "mcp_server": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string" },
+        "transport": {
+          "type": "string",
+          "enum": ["stdio", "streamable_http", "sse", "http", "websocket"]
+        },
+        "command": { "type": "string" },
+        "args": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "url": { "type": "string" },
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "auth": { "type": "object" }
+      }
+    },
+    "a2a_agent": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string" },
+        "agent_card_url": { "type": "string" },
+        "skills": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "auth": { "type": "object" }
+      }
+    },
+    "a2a_server": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "version": { "type": "string" },
+        "skills": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
+        "auth": { "type": "object" }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "protocol": { "type": "string" },
+        "transport": { "type": "string" },
+        "session_model": { "type": "string" },
+        "events": { "type": "object" },
+        "state_schema": { "type": "object" }
       }
     }
   }

@@ -1,0 +1,194 @@
+agentsml: "0.1"
+kind: AgentSystem
+metadata:
+  name: mcp-integration-agent
+  version: "0.1.0"
+  description: >
+    Demonstrates AgentsML integration with Model Context Protocol (MCP) servers.
+    The agent queries a filesystem MCP server and a web search MCP server,
+    combining results to answer research questions with grounded citations.
+  tags:
+    - mcp
+    - research
+    - tools
+
+profiles:
+  required:
+    - agentsml-core
+    - agentsml-mcp
+  optional:
+    - agentsml-observability
+
+models:
+  default:
+    provider: openai
+    name: gpt-4o
+    parameters:
+      temperature: 0.1
+
+tools:
+  filesystem_read:
+    description: Read a file or directory listing from the local filesystem via MCP.
+    source: mcp.tool
+    mcp_server: filesystem_server
+    mcp_tool_name: read_file
+    input_schema:
+      type: object
+      required: [path]
+      properties:
+        path:
+          type: string
+          description: Absolute or relative path to the file to read.
+    output_schema:
+      type: object
+      properties:
+        content:
+          type: string
+        mime_type:
+          type: string
+    side_effect: read
+    permissions:
+      approval: not_required
+      scopes:
+        - filesystem:read
+
+  filesystem_list:
+    description: List files in a directory via MCP.
+    source: mcp.tool
+    mcp_server: filesystem_server
+    mcp_tool_name: list_directory
+    input_schema:
+      type: object
+      required: [path]
+      properties:
+        path:
+          type: string
+    output_schema:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            type: object
+    side_effect: read
+    permissions:
+      approval: not_required
+
+  web_search:
+    description: Search the web for recent information via an MCP-compatible search server.
+    source: mcp.tool
+    mcp_server: search_server
+    mcp_tool_name: search
+    input_schema:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+        max_results:
+          type: integer
+          default: 5
+    output_schema:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              url:
+                type: string
+              snippet:
+                type: string
+    side_effect: external
+    permissions:
+      approval: not_required
+
+# MCP server declarations (agentsml-mcp profile)
+mcp_servers:
+  filesystem_server:
+    transport: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/workspace"]
+    description: Provides read access to the local workspace filesystem.
+    capabilities:
+      - tools
+      - resources
+
+  search_server:
+    transport: streamable_http
+    url: https://mcp.search.example.com/sse
+    description: Provides web search capabilities via MCP.
+    capabilities:
+      - tools
+    auth:
+      type: bearer
+      secret_ref: SEARCH_MCP_API_KEY
+
+agents:
+  research_agent:
+    description: Research agent that uses MCP filesystem and search tools to answer questions.
+    model: default
+    instructions: |
+      You are a research assistant with access to a local filesystem and web search.
+      When asked a research question:
+      1. Check the local filesystem for any relevant existing documents.
+      2. Search the web for current information.
+      3. Synthesize findings into a concise, cited answer.
+      4. Always include source references (file paths or URLs) for claims.
+    tools:
+      - filesystem_read
+      - filesystem_list
+      - web_search
+    output_schema:
+      type: object
+      required: [answer, sources]
+      properties:
+        answer:
+          type: string
+          description: Synthesized research answer.
+        sources:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [file, url]
+              reference:
+                type: string
+
+workflows:
+  research_workflow:
+    description: Single-turn research workflow using MCP tools.
+    input_schema:
+      type: object
+      required: [question]
+      properties:
+        question:
+          type: string
+          description: The research question to answer.
+        workspace_path:
+          type: string
+          default: /workspace
+    output_schema:
+      $ref: "#/agents/research_agent/output_schema"
+    steps:
+      - id: research
+        agent: research_agent
+        input:
+          question: "{{workflow.input.question}}"
+        output:
+          bind_to: workflow.output
+
+deployments:
+  local:
+    target: python
+    runtime: pydanticai
+    environment:
+      SEARCH_MCP_API_KEY:
+        secret_ref: SEARCH_MCP_API_KEY
+    observability:
+      tracing: logfire

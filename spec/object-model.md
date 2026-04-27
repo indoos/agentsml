@@ -18,6 +18,11 @@ workflows: {}
 schemas: {}
 policies: {}
 deployments: {}
+events: {}
+mcp_servers: {}
+a2a_agents: {}
+a2a_server: {}
+ui: {}
 ```
 
 ## `AgentSystem`
@@ -42,6 +47,11 @@ Optional fields:
 - `schemas`
 - `policies`
 - `deployments`
+- `events`
+- `mcp_servers`
+- `a2a_agents`
+- `a2a_server`
+- `ui`
 
 ## `metadata`
 
@@ -68,6 +78,7 @@ Examples:
 - `agentsml-a2a`
 - `agentsml-ui`
 - `agentsml-commerce`
+- `agentsml-payments`
 - `agentsml-enterprise`
 - `agentsml-observability`
 
@@ -215,6 +226,8 @@ Fields:
 - `agent`
 - `tool`
 - `workflow`
+- `a2a_agent`
+- `skill`
 - `input`
 - `output`
 - `condition`
@@ -223,7 +236,13 @@ Fields:
 - `approval`
 - `events`
 
-A step should call exactly one of `agent`, `tool`, or `workflow` unless a profile explicitly permits composite steps.
+A step should call exactly one primary target: `agent`, `tool`, `workflow`, `a2a_agent`, or approval-only `approval`.
+
+`a2a_agent` requires `agentsml-a2a` and identifies a remote agent declared in top-level `a2a_agents`. `skill` optionally selects a remote A2A skill.
+
+An approval-only step is a human-control step whose only primary target is `approval`. A step that invokes an `agent`, `tool`, `workflow`, or `a2a_agent` may still include approval metadata as a gate, but compilers must preserve whether the approval occurs before execution, after execution, or as a standalone pause.
+
+Composite steps require a profile or target extension. Compilers must emit diagnostics rather than silently choosing one target when a step declares multiple primary targets.
 
 ## `edge`
 
@@ -263,6 +282,73 @@ Core event categories:
 - `state.delta`
 - `human.input_required`
 - `artifact.created`
+
+## Profile Extension Blocks
+
+Profile extension blocks are top-level objects used by optional profiles when a capability needs shared declarations rather than per-agent or per-tool fields.
+
+### `events`
+
+System-level event emission and export configuration.
+
+Fields are profile-specific. Common fields include:
+
+- `emit`
+- `export`
+- `redaction`
+
+### `mcp_servers`
+
+Named MCP server declarations for the `agentsml-mcp` profile.
+
+Common fields:
+
+- `description`
+- `transport`
+- `command`
+- `args`
+- `url`
+- `capabilities`
+- `auth`
+
+Tools with `source: mcp.tool` may reference these declarations with `mcp_server` and `mcp_tool_name`.
+
+### `a2a_agents`
+
+Named remote A2A agent declarations for the `agentsml-a2a` profile.
+
+Common fields:
+
+- `description`
+- `agent_card_url`
+- `skills`
+- `auth`
+
+Workflow steps may call these remote agents with `a2a_agent`.
+
+### `a2a_server`
+
+Configuration for exposing an AgentsML system or workflow as an A2A-compatible agent service.
+
+Common fields:
+
+- `name`
+- `description`
+- `version`
+- `skills`
+- `auth`
+
+### `ui`
+
+Live user-interface session configuration for the `agentsml-ui` profile.
+
+Common fields:
+
+- `protocol`
+- `transport`
+- `session_model`
+- `events`
+- `state_schema`
 
 ## `policy`
 

@@ -68,7 +68,11 @@ Adds UI event streams, message deltas, tool-call visibility, state snapshots, st
 
 ### `agentsml-commerce`
 
-Adds products, carts, checkout, mandates, payment authorization, user consent, merchant commitments, fulfillment, cancellation, and refund state.
+Adds products, carts, checkout, user consent, merchant commitments, fulfillment, cancellation, and refund state.
+
+### `agentsml-payments`
+
+Adds payment mandates, payment authorization, spending limits, signed approval evidence, receipts, and payment audit trails.
 
 ### `agentsml-enterprise`
 
@@ -89,4 +93,3 @@ Profile diagnostics should include:
 - `requires_target_extension`
 - `missing_policy`
 - `missing_auth_binding`
-

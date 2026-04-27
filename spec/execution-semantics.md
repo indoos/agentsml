@@ -23,8 +23,12 @@ A step invokes exactly one primary target:
 - `agent`
 - `tool`
 - `workflow`
+- `a2a_agent`
+- approval-only `approval`
 
 Composite targets require a profile or target extension.
+
+An approval-only step pauses the run and returns a typed approval result. A step that also invokes an `agent`, `tool`, `workflow`, or `a2a_agent` may include approval metadata as a gate around that invocation, but the invocation remains the primary target.
 
 ## State Mutation
 
@@ -89,4 +93,3 @@ Targets should distinguish:
 - tool failure
 - policy failure
 - human rejection
-

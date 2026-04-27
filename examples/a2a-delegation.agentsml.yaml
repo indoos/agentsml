@@ -1,0 +1,233 @@
+agentsml: "0.1"
+kind: AgentSystem
+metadata:
+  name: a2a-delegation-agent
+  version: "0.1.0"
+  description: >
+    Demonstrates AgentsML Agent2Agent (A2A) delegation pattern.
+    A coordinator agent discovers and delegates tasks to specialized remote agents
+    via the A2A protocol, aggregating their results into a final report.
+  tags:
+    - a2a
+    - multi-agent
+    - delegation
+
+profiles:
+  required:
+    - agentsml-core
+    - agentsml-a2a
+  optional:
+    - agentsml-observability
+
+models:
+  default:
+    provider: google
+    name: gemini-2.0-flash
+    parameters:
+      temperature: 0.1
+
+tools:
+  # Local tool used by the coordinator
+  aggregate_reports:
+    description: Aggregate multiple sub-reports into a final structured report.
+    source: local.function
+    input_schema:
+      type: object
+      required: [reports]
+      properties:
+        reports:
+          type: array
+          items:
+            type: object
+            properties:
+              agent_id:
+                type: string
+              findings:
+                type: string
+              confidence:
+                type: number
+    output_schema:
+      type: object
+      required: [summary, sections]
+      properties:
+        summary:
+          type: string
+        sections:
+          type: array
+          items:
+            type: object
+    side_effect: read
+    permissions:
+      approval: not_required
+
+# A2A remote agent declarations (agentsml-a2a profile)
+a2a_agents:
+  market_analysis_agent:
+    description: Specialized agent for market analysis and competitive intelligence.
+    agent_card_url: https://market-agent.example.com/.well-known/agent-card.json
+    skills:
+      - market_analysis
+      - competitive_intelligence
+    auth:
+      type: bearer
+      secret_ref: MARKET_AGENT_API_KEY
+
+  regulatory_agent:
+    description: Specialized agent for regulatory compliance and legal analysis.
+    agent_card_url: https://regulatory-agent.example.com/.well-known/agent-card.json
+    skills:
+      - regulatory_analysis
+      - compliance_check
+    auth:
+      type: bearer
+      secret_ref: REGULATORY_AGENT_API_KEY
+
+  technical_analysis_agent:
+    description: Specialized agent for technical feasibility and architecture analysis.
+    agent_card_url: https://tech-agent.example.com/.well-known/agent-card.json
+    skills:
+      - technical_analysis
+      - architecture_review
+    auth:
+      type: bearer
+      secret_ref: TECH_AGENT_API_KEY
+
+agents:
+  coordinator:
+    description: >
+      Coordinator agent that decomposes a business opportunity analysis request
+      into specialized tasks and delegates them to remote A2A agents.
+    model: default
+    instructions: |
+      You are a coordinator for business opportunity analysis.
+      You orchestrate specialized analysis agents to produce comprehensive reports.
+      Your job is to:
+      1. Receive the business opportunity description.
+      2. Formulate specific analysis requests for each specialist.
+      3. Delegate to market, regulatory, and technical analysis agents.
+      4. Aggregate their findings into a coherent report.
+      Always be explicit about what you are asking each specialist to analyze.
+    tools:
+      - aggregate_reports
+    policies:
+      - coordinator_policy
+
+policies:
+  coordinator_policy:
+    description: Policy for coordinator agent interactions with remote A2A agents.
+    applies_to:
+      - agents.coordinator
+    permissions:
+      side_effect: external
+      approval: not_required
+    audit:
+      log_delegations: true
+      include_agent_card_references: true
+
+workflows:
+  business_analysis_workflow:
+    description: >
+      Parallel A2A delegation workflow for business opportunity analysis.
+      Delegates concurrently to market, regulatory, and technical agents,
+      then aggregates results.
+    input_schema:
+      type: object
+      required: [opportunity_description]
+      properties:
+        opportunity_description:
+          type: string
+          description: Description of the business opportunity to analyze.
+        company_context:
+          type: string
+          description: Optional context about the requesting company.
+    output_schema:
+      type: object
+      required: [report]
+      properties:
+        report:
+          type: object
+          properties:
+            summary:
+              type: string
+            market_analysis:
+              type: object
+            regulatory_analysis:
+              type: object
+            technical_analysis:
+              type: object
+            recommendation:
+              type: string
+    steps:
+      # Parallel delegation to specialized A2A agents
+      - id: market_analysis
+        a2a_agent: market_analysis_agent
+        skill: market_analysis
+        input:
+          task: "Perform market analysis for: {{workflow.input.opportunity_description}}"
+          context: "{{workflow.input.company_context}}"
+        output:
+          bind_to: state.market_findings
+
+      - id: regulatory_analysis
+        a2a_agent: regulatory_agent
+        skill: regulatory_analysis
+        input:
+          task: "Analyze regulatory requirements for: {{workflow.input.opportunity_description}}"
+        output:
+          bind_to: state.regulatory_findings
+
+      - id: technical_analysis
+        a2a_agent: technical_analysis_agent
+        skill: technical_analysis
+        input:
+          task: "Assess technical feasibility of: {{workflow.input.opportunity_description}}"
+        output:
+          bind_to: state.technical_findings
+
+      # Aggregate results
+      - id: aggregate
+        agent: coordinator
+        depends_on:
+          - market_analysis
+          - regulatory_analysis
+          - technical_analysis
+        input:
+          reports:
+            - agent_id: market_analysis_agent
+              findings: "{{state.market_findings}}"
+            - agent_id: regulatory_agent
+              findings: "{{state.regulatory_findings}}"
+            - agent_id: technical_analysis_agent
+              findings: "{{state.technical_findings}}"
+        output:
+          bind_to: workflow.output.report
+
+# Expose this system as an A2A server (optional)
+a2a_server:
+  name: business-analysis-coordinator
+  description: Coordinator for comprehensive business opportunity analysis.
+  version: "0.1.0"
+  skills:
+    - id: business_analysis
+      name: Business Opportunity Analysis
+      description: Full market, regulatory, and technical analysis of a business opportunity.
+      input_schema:
+        type: object
+        required: [opportunity_description]
+        properties:
+          opportunity_description:
+            type: string
+
+deployments:
+  local:
+    target: python
+    runtime: google-adk
+    environment:
+      MARKET_AGENT_API_KEY:
+        secret_ref: MARKET_AGENT_API_KEY
+      REGULATORY_AGENT_API_KEY:
+        secret_ref: REGULATORY_AGENT_API_KEY
+      TECH_AGENT_API_KEY:
+        secret_ref: TECH_AGENT_API_KEY
+    observability:
+      tracing: cloud_trace
