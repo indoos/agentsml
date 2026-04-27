@@ -1,0 +1,323 @@
+agentsml: "0.1"
+kind: AgentSystem
+metadata:
+  name: credit-risk-underwriting-system
+  version: 0.1.0
+  description: Multi-agent credit risk workflow for underwriting, explainability, and approval.
+  tags:
+    - credit-risk
+    - underwriting
+    - human-approval
+profiles:
+  required:
+    - agentsml-core
+    - agentsml-graph
+    - agentsml-rag
+    - agentsml-enterprise
+    - agentsml-observability
+  optional:
+    - agentsml-ui
+models:
+  reasoning:
+    provider: openai
+    name: gpt-5.1
+    parameters:
+      temperature: 0.1
+  extraction:
+    provider: openai
+    name: gpt-5.1-mini
+    parameters:
+      temperature: 0
+schemas:
+  Applicant:
+    type: object
+    properties:
+      applicant_id:
+        type: string
+      requested_amount:
+        type: number
+      stated_income:
+        type: number
+      employment_status:
+        type: string
+      region:
+        type: string
+    required:
+      - applicant_id
+      - requested_amount
+      - stated_income
+  RiskDecision:
+    type: object
+    properties:
+      decision:
+        type: string
+        enum:
+          - approve
+          - manual_review
+          - decline
+      risk_grade:
+        type: string
+      probability_of_default:
+        type: number
+      adverse_action_reasons:
+        type: array
+        items:
+          type: string
+      required_conditions:
+        type: array
+        items:
+          type: string
+      explanation:
+        type: string
+      evidence:
+        type: array
+        items:
+          type: string
+    required:
+      - decision
+      - risk_grade
+      - explanation
+tools:
+  pull_credit_bureau:
+    description: Retrieve credit bureau attributes for an applicant.
+    source: openapi.operation
+    side_effect: read
+    auth:
+      secret_ref: credit_bureau_api
+    input_schema:
+      type: object
+      properties:
+        applicant_id:
+          type: string
+      required:
+        - applicant_id
+    output_schema:
+      type: object
+      properties:
+        score:
+          type: integer
+        delinquencies_24m:
+          type: integer
+        utilization_ratio:
+          type: number
+        inquiries_6m:
+          type: integer
+  verify_income:
+    description: Verify applicant income through payroll or bank-statement provider.
+    source: mcp.tool
+    side_effect: external
+    auth:
+      secret_ref: income_verification_mcp
+    permissions:
+      approval: never
+      pii: required
+    input_schema:
+      type: object
+      properties:
+        applicant_id:
+          type: string
+        stated_income:
+          type: number
+      required:
+        - applicant_id
+        - stated_income
+  calculate_debt_to_income:
+    description: Calculate DTI and affordability ratios.
+    source: local.function
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        monthly_debt:
+          type: number
+        verified_monthly_income:
+          type: number
+      required:
+        - monthly_debt
+        - verified_monthly_income
+  run_pd_model:
+    description: Score probability of default using an approved statistical model.
+    source: openapi.operation
+    side_effect: read
+    auth:
+      secret_ref: model_registry_api
+    input_schema:
+      type: object
+      properties:
+        applicant:
+          $ref: "#/schemas/Applicant"
+        bureau:
+          type: object
+        affordability:
+          type: object
+      required:
+        - applicant
+        - bureau
+        - affordability
+  search_credit_policy:
+    description: Search underwriting policy, exception rules, and adverse action guidance.
+    source: mcp.tool
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        query:
+          type: string
+      required:
+        - query
+  check_fair_lending_policy:
+    description: Check whether proposed decision uses prohibited or proxy-sensitive factors.
+    source: local.function
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        decision:
+          $ref: "#/schemas/RiskDecision"
+        applicant:
+          $ref: "#/schemas/Applicant"
+      required:
+        - decision
+        - applicant
+policies:
+  pii_minimization:
+    description: Agents may use applicant PII only for approved underwriting steps.
+    applies_to:
+      - agents.*
+      - tools.*
+    permissions:
+      pii_access: purpose_bound
+    audit:
+      required: true
+  manual_review_for_decline:
+    description: Declines and high-risk approvals require human review.
+    applies_to:
+      - workflows.main.steps.human_review
+    approval:
+      required_when:
+        - state.preliminary_decision.decision == "decline"
+        - state.preliminary_decision.decision == "manual_review"
+agents:
+  intake_specialist:
+    description: Normalizes application data and identifies missing underwriting inputs.
+    role: intake_specialist
+    model: extraction
+    instructions: Extract only supplied applicant facts. Do not infer income, region, or protected-class attributes.
+    tools: []
+    output_schema:
+      $ref: "#/schemas/Applicant"
+    policies:
+      - pii_minimization
+  bureau_analyst:
+    description: Pulls credit bureau data and summarizes credit history risk.
+    role: credit_bureau_analyst
+    model: reasoning
+    instructions: Use bureau attributes to summarize credit behavior and risk indicators.
+    tools:
+      - pull_credit_bureau
+  affordability_analyst:
+    description: Verifies income and evaluates repayment capacity.
+    role: affordability_analyst
+    model: reasoning
+    instructions: Verify income, calculate affordability, and flag inconsistent or stale data.
+    tools:
+      - verify_income
+      - calculate_debt_to_income
+  policy_reviewer:
+    description: Retrieves underwriting rules and checks fair lending constraints.
+    role: policy_reviewer
+    model: reasoning
+    instructions: Apply only documented policy. Cite policy sections for each material decision factor.
+    tools:
+      - search_credit_policy
+      - check_fair_lending_policy
+  risk_decision_agent:
+    description: Combines evidence into an explainable underwriting recommendation.
+    role: risk_decision_agent
+    model: reasoning
+    instructions: Produce a conservative, source-backed credit decision with adverse action reasons when applicable.
+    tools:
+      - run_pd_model
+    output_schema:
+      $ref: "#/schemas/RiskDecision"
+workflows:
+  main:
+    description: Underwrite a credit application with policy and human-review controls.
+    input_schema:
+      $ref: "#/schemas/Applicant"
+    state:
+      schema:
+        type: object
+        properties:
+          applicant:
+            $ref: "#/schemas/Applicant"
+          bureau_summary:
+            type: object
+          affordability_summary:
+            type: object
+          policy_findings:
+            type: object
+          preliminary_decision:
+            $ref: "#/schemas/RiskDecision"
+          final_decision:
+            $ref: "#/schemas/RiskDecision"
+    steps:
+      - id: normalize_application
+        agent: intake_specialist
+        input:
+          applicant: ${input}
+      - id: bureau_review
+        agent: bureau_analyst
+        depends_on:
+          - normalize_application
+        input:
+          applicant_id: ${state.applicant.applicant_id}
+      - id: affordability_review
+        agent: affordability_analyst
+        depends_on:
+          - normalize_application
+        input:
+          applicant: ${state.applicant}
+      - id: policy_review
+        agent: policy_reviewer
+        depends_on:
+          - bureau_review
+          - affordability_review
+        input:
+          applicant: ${state.applicant}
+          bureau: ${state.bureau_summary}
+          affordability: ${state.affordability_summary}
+      - id: preliminary_decision
+        agent: risk_decision_agent
+        depends_on:
+          - policy_review
+        input:
+          applicant: ${state.applicant}
+          bureau: ${state.bureau_summary}
+          affordability: ${state.affordability_summary}
+          policy: ${state.policy_findings}
+      - id: human_review
+        approval:
+          prompt: Review credit decision, adverse action reasons, and policy evidence.
+          approvers:
+            - credit_risk_manager
+          timeout: PT24H
+          on_approve: finalize_decision
+          on_reject: request_rework
+        depends_on:
+          - preliminary_decision
+      - id: finalize_decision
+        agent: risk_decision_agent
+        depends_on:
+          - human_review
+        input:
+          preliminary_decision: ${state.preliminary_decision}
+          approval: ${steps.human_review.output}
+    edges:
+      - from: preliminary_decision
+        to: human_review
+        condition: ${state.preliminary_decision.decision != "approve" || state.preliminary_decision.probability_of_default > 0.08}
+      - from: preliminary_decision
+        to: finalize_decision
+        condition: ${state.preliminary_decision.decision == "approve" && state.preliminary_decision.probability_of_default <= 0.08}
+

@@ -1,0 +1,302 @@
+agentsml: "0.1"
+kind: AgentSystem
+metadata:
+  name: kyc-aml-investigation-system
+  version: 0.1.0
+  description: Multi-agent KYC and transaction-monitoring investigation with sanctions screening, adverse media, and SAR recommendation.
+  tags:
+    - kyc
+    - aml-compliance
+    - sanctions
+    - investigation
+profiles:
+  required:
+    - agentsml-core
+    - agentsml-graph
+    - agentsml-rag
+    - agentsml-enterprise
+    - agentsml-observability
+  optional:
+    - agentsml-ui
+models:
+  analyst:
+    provider: openai
+    name: gpt-5.1
+    parameters:
+      temperature: 0.1
+  extractor:
+    provider: openai
+    name: gpt-5.1-mini
+    parameters:
+      temperature: 0
+schemas:
+  Customer:
+    type: object
+    properties:
+      customer_id:
+        type: string
+      legal_name:
+        type: string
+      country:
+        type: string
+      entity_type:
+        type: string
+      onboarding_date:
+        type: string
+    required:
+      - customer_id
+      - legal_name
+      - country
+  InvestigationReport:
+    type: object
+    properties:
+      risk_rating:
+        type: string
+        enum:
+          - low
+          - medium
+          - high
+          - prohibited
+      sanctions_match:
+        type: string
+        enum:
+          - none
+          - possible
+          - confirmed
+      adverse_media_summary:
+        type: string
+      suspicious_activity_summary:
+        type: string
+      recommended_action:
+        type: string
+        enum:
+          - clear
+          - enhanced_due_diligence
+          - exit_relationship
+          - file_sar
+      evidence:
+        type: array
+        items:
+          type: string
+      reviewer_notes:
+        type: string
+    required:
+      - risk_rating
+      - sanctions_match
+      - recommended_action
+      - evidence
+tools:
+  screen_sanctions:
+    description: Screen customer and beneficial owners against sanctions and watchlists.
+    source: openapi.operation
+    side_effect: read
+    auth:
+      secret_ref: sanctions_provider_api
+    input_schema:
+      type: object
+      properties:
+        legal_name:
+          type: string
+        country:
+          type: string
+      required:
+        - legal_name
+  search_adverse_media:
+    description: Search approved adverse-media sources and return citation-backed results.
+    source: mcp.tool
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        query:
+          type: string
+      required:
+        - query
+  retrieve_customer_transactions:
+    description: Retrieve recent transactions and monitoring alerts for the customer.
+    source: openapi.operation
+    side_effect: read
+    auth:
+      secret_ref: transaction_monitoring_api
+    input_schema:
+      type: object
+      properties:
+        customer_id:
+          type: string
+        lookback_days:
+          type: integer
+      required:
+        - customer_id
+  detect_transaction_typologies:
+    description: Match transaction behavior to known AML typologies.
+    source: local.function
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        transactions:
+          type: array
+        customer:
+          $ref: "#/schemas/Customer"
+      required:
+        - transactions
+        - customer
+  search_compliance_policy:
+    description: Search KYC, sanctions, EDD, and SAR filing policies.
+    source: mcp.tool
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        query:
+          type: string
+      required:
+        - query
+  draft_sar_narrative:
+    description: Draft a suspicious activity report narrative from approved evidence.
+    source: local.function
+    side_effect: write
+    permissions:
+      approval: required
+    input_schema:
+      type: object
+      properties:
+        report:
+          $ref: "#/schemas/InvestigationReport"
+      required:
+        - report
+policies:
+  compliance_audit:
+    description: All sanctions, adverse media, and SAR steps require audit events and evidence references.
+    applies_to:
+      - agents.*
+      - tools.*
+    permissions:
+      audit: required
+      evidence_required: true
+  sar_human_approval:
+    description: SAR recommendations require compliance officer approval before drafting or filing.
+    applies_to:
+      - workflows.main.steps.compliance_approval
+    approval:
+      required_when:
+        - state.report.recommended_action == "file_sar"
+agents:
+  sanctions_agent:
+    description: Assesses sanctions and watchlist screening results.
+    role: sanctions_screening_agent
+    model: analyst
+    instructions: Distinguish confirmed matches from possible name matches. Cite match evidence and uncertainty.
+    tools:
+      - screen_sanctions
+  adverse_media_agent:
+    description: Searches and summarizes adverse media with citations.
+    role: adverse_media_agent
+    model: analyst
+    instructions: Use only approved sources. Separate allegations, convictions, and unrelated name matches.
+    tools:
+      - search_adverse_media
+  transaction_monitoring_agent:
+    description: Evaluates recent transaction behavior and suspicious typologies.
+    role: transaction_monitoring_agent
+    model: analyst
+    instructions: Identify typologies, unusual behavior, and missing context. Do not overstate suspicion.
+    tools:
+      - retrieve_customer_transactions
+      - detect_transaction_typologies
+  policy_agent:
+    description: Applies internal KYC, sanctions, EDD, and SAR policies.
+    role: compliance_policy_agent
+    model: analyst
+    instructions: Retrieve relevant policy and explain the required action.
+    tools:
+      - search_compliance_policy
+  case_synthesizer:
+    description: Produces final investigation report and recommended action.
+    role: case_synthesizer
+    model: analyst
+    instructions: Combine evidence conservatively, preserve uncertainty, and recommend the minimum compliant action.
+    tools:
+      - draft_sar_narrative
+    output_schema:
+      $ref: "#/schemas/InvestigationReport"
+workflows:
+  main:
+    description: Conduct KYC/AML investigation and route high-risk cases to a human compliance officer.
+    input_schema:
+      $ref: "#/schemas/Customer"
+    state:
+      schema:
+        type: object
+        properties:
+          customer:
+            $ref: "#/schemas/Customer"
+          sanctions:
+            type: object
+          adverse_media:
+            type: object
+          transaction_findings:
+            type: object
+          policy_guidance:
+            type: object
+          report:
+            $ref: "#/schemas/InvestigationReport"
+    steps:
+      - id: sanctions_review
+        agent: sanctions_agent
+        input:
+          customer: ${input}
+      - id: adverse_media_review
+        agent: adverse_media_agent
+        input:
+          query: ${input.legal_name}
+      - id: transaction_review
+        agent: transaction_monitoring_agent
+        input:
+          customer_id: ${input.customer_id}
+          lookback_days: 180
+      - id: policy_review
+        agent: policy_agent
+        depends_on:
+          - sanctions_review
+          - adverse_media_review
+          - transaction_review
+        input:
+          sanctions: ${state.sanctions}
+          adverse_media: ${state.adverse_media}
+          transaction_findings: ${state.transaction_findings}
+      - id: synthesize_report
+        agent: case_synthesizer
+        depends_on:
+          - policy_review
+        input:
+          customer: ${input}
+          sanctions: ${state.sanctions}
+          adverse_media: ${state.adverse_media}
+          transaction_findings: ${state.transaction_findings}
+          policy: ${state.policy_guidance}
+      - id: compliance_approval
+        approval:
+          prompt: Review investigation report, evidence, and recommended action.
+          approvers:
+            - compliance_officer
+          timeout: P2D
+          on_approve: final_report
+          on_reject: request_more_evidence
+        depends_on:
+          - synthesize_report
+      - id: final_report
+        agent: case_synthesizer
+        depends_on:
+          - compliance_approval
+        input:
+          report: ${state.report}
+          approval: ${steps.compliance_approval.output}
+    edges:
+      - from: synthesize_report
+        to: compliance_approval
+        condition: ${state.report.recommended_action != "clear" || state.report.sanctions_match != "none"}
+      - from: synthesize_report
+        to: final_report
+        condition: ${state.report.recommended_action == "clear" && state.report.sanctions_match == "none"}
+

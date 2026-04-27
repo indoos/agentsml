@@ -1,0 +1,395 @@
+agentsml: "0.1"
+kind: AgentSystem
+metadata:
+  name: real-time-fraud-detection-system
+  version: 0.1.0
+  description: Multi-agent fraud investigation workflow with streaming events, graph retries, and human escalation.
+  tags:
+    - fraud
+    - payments
+    - graph
+    - case-management
+profiles:
+  required:
+    - agentsml-core
+    - agentsml-graph
+    - agentsml-rag
+    - agentsml-ui
+    - agentsml-enterprise
+    - agentsml-observability
+models:
+  realtime:
+    provider: openai
+    name: gpt-5.1-mini
+    parameters:
+      temperature: 0
+  investigator:
+    provider: openai
+    name: gpt-5.1
+    parameters:
+      temperature: 0.1
+schemas:
+  Transaction:
+    type: object
+    properties:
+      transaction_id:
+        type: string
+      account_id:
+        type: string
+      merchant_id:
+        type: string
+      amount:
+        type: number
+      currency:
+        type: string
+      channel:
+        type: string
+      timestamp:
+        type: string
+      device_id:
+        type: string
+      ip_address:
+        type: string
+    required:
+      - transaction_id
+      - account_id
+      - merchant_id
+      - amount
+      - currency
+      - timestamp
+  FraudDisposition:
+    type: object
+    properties:
+      action:
+        type: string
+        enum:
+          - allow
+          - step_up_auth
+          - hold
+          - block
+          - escalate
+      fraud_score:
+        type: number
+      reasons:
+        type: array
+        items:
+          type: string
+      evidence:
+        type: array
+        items:
+          type: string
+      customer_message:
+        type: string
+      case_priority:
+        type: string
+        enum:
+          - low
+          - medium
+          - high
+          - critical
+    required:
+      - action
+      - fraud_score
+      - reasons
+tools:
+  get_account_profile:
+    description: Retrieve account age, normal spend bands, and recent risk flags.
+    source: openapi.operation
+    side_effect: read
+    auth:
+      secret_ref: account_api
+    input_schema:
+      type: object
+      properties:
+        account_id:
+          type: string
+      required:
+        - account_id
+  get_device_reputation:
+    description: Check device fingerprint, emulator signals, and historical account links.
+    source: mcp.tool
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        device_id:
+          type: string
+      required:
+        - device_id
+  get_ip_risk:
+    description: Check IP geolocation, proxy/VPN risk, velocity, and abuse reports.
+    source: mcp.tool
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        ip_address:
+          type: string
+      required:
+        - ip_address
+  score_transaction:
+    description: Run the production fraud model and return score plus reason codes.
+    source: openapi.operation
+    side_effect: read
+    auth:
+      secret_ref: fraud_model_api
+    input_schema:
+      type: object
+      properties:
+        transaction:
+          $ref: "#/schemas/Transaction"
+        account_profile:
+          type: object
+        device_risk:
+          type: object
+        ip_risk:
+          type: object
+      required:
+        - transaction
+  search_fraud_playbooks:
+    description: Search internal fraud playbooks, merchant watchlists, and escalation criteria.
+    source: mcp.tool
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        query:
+          type: string
+      required:
+        - query
+  step_up_authentication:
+    description: Trigger customer step-up authentication.
+    source: openapi.operation
+    side_effect: external
+    auth:
+      secret_ref: auth_service_api
+    permissions:
+      approval: never
+      customer_contact: allowed
+    input_schema:
+      type: object
+      properties:
+        account_id:
+          type: string
+        transaction_id:
+          type: string
+        method:
+          type: string
+      required:
+        - account_id
+        - transaction_id
+  place_transaction_hold:
+    description: Place a temporary hold on a suspicious transaction.
+    source: openapi.operation
+    side_effect: write
+    auth:
+      secret_ref: payments_api
+    permissions:
+      approval: conditional
+      condition: fraud_score >= 0.85
+    input_schema:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+        duration:
+          type: string
+        reason:
+          type: string
+      required:
+        - transaction_id
+        - reason
+  create_case:
+    description: Create or update a fraud case for manual investigation.
+    source: openapi.operation
+    side_effect: write
+    auth:
+      secret_ref: case_management_api
+    input_schema:
+      type: object
+      properties:
+        transaction_id:
+          type: string
+        priority:
+          type: string
+        evidence:
+          type: array
+          items:
+            type: string
+      required:
+        - transaction_id
+        - priority
+policies:
+  fraud_action_policy:
+    description: Customer-impacting fraud actions require explainable evidence and audit.
+    applies_to:
+      - tools.step_up_authentication
+      - tools.place_transaction_hold
+      - tools.create_case
+    permissions:
+      audit: required
+      reason_codes: required
+  high_impact_hold_review:
+    description: Large transaction holds require fraud operations approval.
+    applies_to:
+      - workflows.main.steps.manual_escalation
+    approval:
+      required_when:
+        - state.transaction.amount >= 10000
+        - state.disposition.action == "block"
+agents:
+  signal_collector:
+    description: Collects account, device, IP, and merchant risk signals.
+    role: signal_collector
+    model: realtime
+    instructions: Collect only the minimum fraud signals required for scoring.
+    tools:
+      - get_account_profile
+      - get_device_reputation
+      - get_ip_risk
+  fraud_scorer:
+    description: Scores the transaction and normalizes model reason codes.
+    role: fraud_scorer
+    model: realtime
+    instructions: Use the production fraud score as primary quantitative evidence.
+    tools:
+      - score_transaction
+    output_schema:
+      type: object
+      properties:
+        fraud_score:
+          type: number
+        reason_codes:
+          type: array
+          items:
+            type: string
+  playbook_specialist:
+    description: Retrieves relevant fraud playbooks and escalation criteria.
+    role: playbook_specialist
+    model: investigator
+    instructions: Cite playbook sections and avoid inventing policy.
+    tools:
+      - search_fraud_playbooks
+  disposition_agent:
+    description: Chooses allow, step-up, hold, block, or escalate based on evidence.
+    role: disposition_agent
+    model: investigator
+    instructions: Make the least disruptive decision that controls fraud risk. Explain every customer-impacting action.
+    tools:
+      - step_up_authentication
+      - place_transaction_hold
+      - create_case
+    output_schema:
+      $ref: "#/schemas/FraudDisposition"
+workflows:
+  main:
+    description: Detect and respond to transaction fraud risk.
+    input_schema:
+      $ref: "#/schemas/Transaction"
+    state:
+      schema:
+        type: object
+        properties:
+          transaction:
+            $ref: "#/schemas/Transaction"
+          signals:
+            type: object
+          score:
+            type: object
+          playbook:
+            type: object
+          disposition:
+            $ref: "#/schemas/FraudDisposition"
+          auth_result:
+            type: object
+          final_action:
+            type: object
+    steps:
+      - id: collect_signals
+        agent: signal_collector
+        input:
+          transaction: ${input}
+      - id: score
+        agent: fraud_scorer
+        depends_on:
+          - collect_signals
+        input:
+          transaction: ${input}
+          signals: ${state.signals}
+      - id: retrieve_playbook
+        agent: playbook_specialist
+        depends_on:
+          - score
+        input:
+          score: ${state.score}
+          channel: ${input.channel}
+          merchant_id: ${input.merchant_id}
+      - id: decide
+        agent: disposition_agent
+        depends_on:
+          - retrieve_playbook
+        input:
+          transaction: ${input}
+          signals: ${state.signals}
+          score: ${state.score}
+          playbook: ${state.playbook}
+      - id: step_up
+        tool: step_up_authentication
+        input:
+          account_id: ${input.account_id}
+          transaction_id: ${input.transaction_id}
+          method: push
+      - id: rescore_after_auth
+        agent: fraud_scorer
+        input:
+          transaction: ${input}
+          signals: ${state.signals}
+          auth_result: ${state.auth_result}
+      - id: hold_transaction
+        tool: place_transaction_hold
+        input:
+          transaction_id: ${input.transaction_id}
+          duration: PT24H
+          reason: ${state.disposition.reasons[0]}
+      - id: manual_escalation
+        approval:
+          prompt: Review high-impact fraud action and evidence before customer-impacting hold or block.
+          approvers:
+            - fraud_ops_lead
+          timeout: PT30M
+          on_approve: create_case
+          on_reject: step_up
+      - id: create_case
+        tool: create_case
+        input:
+          transaction_id: ${input.transaction_id}
+          priority: ${state.disposition.case_priority}
+          evidence: ${state.disposition.evidence}
+    edges:
+      - from: decide
+        to: step_up
+        condition: ${state.disposition.action == "step_up_auth"}
+      - from: step_up
+        to: rescore_after_auth
+      - from: rescore_after_auth
+        to: decide
+        condition: ${state.score.fraud_score >= 0.4}
+      - from: decide
+        to: hold_transaction
+        condition: ${state.disposition.action == "hold" && input.amount < 10000}
+      - from: decide
+        to: manual_escalation
+        condition: ${state.disposition.action == "block" || input.amount >= 10000}
+      - from: manual_escalation
+        to: create_case
+        condition: ${steps.manual_escalation.output.approved == true}
+events:
+  emit:
+    - run.started
+    - step.started
+    - tool.call
+    - state.delta
+    - human.input_required
+    - artifact.created
+    - run.finished
+

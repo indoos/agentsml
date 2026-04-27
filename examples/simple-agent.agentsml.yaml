@@ -1,0 +1,72 @@
+agentsml: "0.1"
+kind: AgentSystem
+metadata:
+  name: simple-research-agent
+  version: 0.1.0
+  description: Single agent with one read-only tool and typed output.
+profiles:
+  - agentsml-core
+models:
+  default:
+    provider: openai
+    name: gpt-5.1
+    parameters:
+      temperature: 0.2
+tools:
+  web_search:
+    description: Search the web for current source-backed information.
+    source: mcp.tool
+    input_schema:
+      type: object
+      properties:
+        query:
+          type: string
+      required:
+        - query
+    output_schema:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+      required:
+        - results
+    side_effect: read
+    permissions:
+      approval: never
+agents:
+  researcher:
+    description: Finds concise source-backed answers.
+    role: researcher
+    model: default
+    instructions: Research carefully, prefer official sources, and summarize with citations.
+    tools:
+      - web_search
+    output_schema:
+      type: object
+      properties:
+        summary:
+          type: string
+        sources:
+          type: array
+          items:
+            type: string
+      required:
+        - summary
+        - sources
+workflows:
+  main:
+    description: Answer one research question.
+    input_schema:
+      type: object
+      properties:
+        question:
+          type: string
+      required:
+        - question
+    steps:
+      - id: answer
+        agent: researcher
+        input:
+          question: ${input.question}

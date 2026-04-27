@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentsml.org/schemas/agentsml-0.1.schema.json",
+  "title": "AgentsML",
+  "type": "object",
+  "required": ["agentsml", "kind", "metadata"],
+  "additionalProperties": false,
+  "properties": {
+    "agentsml": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "kind": {
+      "type": "string",
+      "const": "AgentSystem"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "version": { "type": "string" },
+        "description": { "type": "string" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "profiles": {
+      "oneOf": [
+        {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "optional": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "extensions": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      ]
+    },
+    "models": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/model" }
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/tool" }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/resource" }
+    },
+    "prompts": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/prompt" }
+    },
+    "agents": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/agent" }
+    },
+    "workflows": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/workflow" }
+    },
+    "schemas": {
+      "type": "object",
+      "additionalProperties": { "type": "object" }
+    },
+    "policies": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/policy" }
+    },
+    "deployments": {
+      "type": "object",
+      "additionalProperties": { "type": "object" }
+    }
+  },
+  "$defs": {
+    "model": {
+      "type": "object",
+      "required": ["provider", "name"],
+      "additionalProperties": true,
+      "properties": {
+        "provider": { "type": "string" },
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "parameters": { "type": "object" },
+        "fallbacks": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "tool": {
+      "type": "object",
+      "required": ["description", "source"],
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string" },
+        "source": { "type": "string" },
+        "input_schema": { "type": "object" },
+        "output_schema": { "type": "object" },
+        "auth": { "type": "object" },
+        "permissions": { "type": "object" },
+        "side_effect": {
+          "type": "string",
+          "enum": ["read", "write", "delete", "payment", "browser", "external", "unknown"]
+        },
+        "timeout": { "type": ["number", "string"] },
+        "error_policy": { "type": "object" }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string" },
+        "source": { "type": "string" },
+        "schema": { "type": "object" },
+        "auth": { "type": "object" },
+        "permissions": { "type": "object" }
+      }
+    },
+    "prompt": {
+      "type": "object",
+      "required": ["template"],
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string" },
+        "template": { "type": "string" },
+        "input_schema": { "type": "object" },
+        "metadata": { "type": "object" }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "required": ["model", "instructions"],
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string" },
+        "role": { "type": "string" },
+        "model": { "type": "string" },
+        "instructions": { "type": "string" },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "resources": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "prompts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "memory": { "type": "object" },
+        "knowledge": { "type": "object" },
+        "output_schema": { "type": "object" },
+        "policies": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "required": ["steps"],
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string" },
+        "input_schema": { "type": "object" },
+        "output_schema": { "type": "object" },
+        "state": { "type": "object" },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/step" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/edge" }
+        },
+        "events": { "type": "array" },
+        "error_policy": { "type": "object" }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string" },
+        "agent": { "type": "string" },
+        "tool": { "type": "string" },
+        "workflow": { "type": "string" },
+        "input": {},
+        "output": {},
+        "condition": {},
+        "depends_on": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "retry": { "type": "object" },
+        "approval": { "type": ["string", "object"] },
+        "events": { "type": "array" }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": ["from", "to"],
+      "additionalProperties": true,
+      "properties": {
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "condition": {},
+        "label": { "type": "string" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "description": { "type": "string" },
+        "applies_to": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "permissions": { "type": "object" },
+        "guardrails": { "type": "object" },
+        "approval": { "type": "object" },
+        "audit": { "type": "object" }
+      }
+    }
+  }
+}
