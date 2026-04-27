@@ -15,7 +15,7 @@ models:
 tools:
   web_search:
     description: Search the web for current source-backed information.
-    source: mcp.tool
+    source: local.function
     input_schema:
       type: object
       properties:
