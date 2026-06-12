@@ -91,8 +91,7 @@
       "additionalProperties": { "type": "object" }
     },
     "events": {
-      "type": "object",
-      "additionalProperties": true
+      "$ref": "#/$defs/events_config"
     },
     "mcp_servers": {
       "type": "object",
@@ -236,8 +235,17 @@
           "items": { "type": "string" }
         },
         "retry": { "type": "object" },
+        "timeout": { "type": ["number", "string"] },
         "approval": { "type": ["string", "object"] },
-        "events": { "type": "array" }
+        "events": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              { "type": "object" }
+            ]
+          }
+        }
       }
     },
     "edge": {
@@ -264,6 +272,18 @@
         "guardrails": { "type": "object" },
         "approval": { "type": "object" },
         "audit": { "type": "object" }
+      }
+    },
+    "events_config": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "emit": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "export": { "type": "object" },
+        "redaction": { "type": "object" }
       }
     },
     "mcp_server": {
@@ -322,7 +342,7 @@
         "protocol": { "type": "string" },
         "transport": { "type": "string" },
         "session_model": { "type": "string" },
-        "events": { "type": "object" },
+        "events": { "$ref": "#/$defs/events_config" },
         "state_schema": { "type": "object" }
       }
     }
