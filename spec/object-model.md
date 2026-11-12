@@ -1,11 +1,11 @@
 # AgentsML Object Model Draft
 
-Status: draft v0.1 seed
+Status: draft v0.2
 
 ## Top-Level Object
 
 ```yaml
-agentsml: "0.1"
+agentsml: "0.2"
 kind: AgentSystem
 metadata: {}
 profiles: []
@@ -253,7 +253,11 @@ Fields:
 - `condition`
 - `label`
 
-Cycles require `agentsml-graph`.
+`condition` is an expression in the core condition grammar. See
+[Execution Semantics](execution-semantics.md#condition-grammar).
+
+Cycles require `agentsml-graph`. Fan-out to two or more unconditional successors,
+and joins from two or more unconditional predecessors, also require `agentsml-graph`.
 
 ## `state`
 

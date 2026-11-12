@@ -1,6 +1,6 @@
 # AgentsML Profile System Draft
 
-Status: draft v0.1 seed
+Status: draft v0.2
 
 ## Purpose
 

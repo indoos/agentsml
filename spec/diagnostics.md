@@ -1,6 +1,6 @@
 # AgentsML Diagnostics Draft
 
-Status: draft v0.1 seed
+Status: draft v0.2
 
 Diagnostics make portability honest.
 

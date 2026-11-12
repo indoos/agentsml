@@ -1,0 +1,115 @@
+agentsml: "0.2"
+kind: AgentSystem
+
+metadata:
+  name: branching-agent
+  version: "0.2.0"
+  description: >
+    Demonstrates draft 0.2 semantics: conditional edges on a step output, parallel
+    fan-out to two successors, and a join that waits for both branches.
+
+profiles:
+  required:
+    - agentsml-core
+    - agentsml-graph
+
+models:
+  default:
+    provider: openai
+    name: gpt-4o-mini
+
+tools:
+  fetch_credit_score:
+    description: Fetch the credit score for a customer.
+    source: local.function
+    side_effect: read
+    input_schema:
+      type: object
+      properties:
+        customer_id:
+          type: string
+      required:
+        - customer_id
+
+agents:
+  assessor:
+    model: default
+    description: Decides whether an application is approved.
+    instructions: >
+      Assess the application and reply with a single JSON object with a decision
+      field set to "approved" or "declined".
+    tools:
+      - fetch_credit_score
+    output_schema:
+      type: object
+      properties:
+        decision:
+          type: string
+      required:
+        - decision
+
+  writer:
+    model: default
+    description: Writes the offer letter for an approved application.
+    instructions: Write a short offer letter.
+
+  reviewer:
+    model: default
+    description: Explains why an application was declined.
+    instructions: Explain the decline in one paragraph.
+
+  fact_checker:
+    model: default
+    description: Summarises the verified facts of an application.
+    instructions: Summarise the verified facts.
+
+  risk_checker:
+    model: default
+    description: Summarises the risks of an application.
+    instructions: Summarise the outstanding risks.
+
+  summariser:
+    model: default
+    description: Combines the facts and risks into one summary.
+    instructions: Combine the facts and risks into a single summary.
+
+workflows:
+  main:
+    description: Assess an application, branch on the decision, and gather summaries.
+    state:
+      schema:
+        type: object
+        properties:
+          customer_id:
+            type: string
+    steps:
+      - id: assess
+        agent: assessor
+      - id: offer
+        agent: writer
+      - id: decline
+        agent: reviewer
+      - id: facts
+        agent: fact_checker
+      - id: risks
+        agent: risk_checker
+      - id: summary
+        agent: summariser
+    edges:
+      # Conditional alternatives: exactly one of these is taken.
+      - from: assess
+        to: offer
+        condition: '${steps.assess.output.decision == "approved"}'
+      - from: assess
+        to: decline
+        condition: '${steps.assess.output.decision != "approved"}'
+      # Fan-out: both of these run from the assessment.
+      - from: assess
+        to: facts
+      - from: assess
+        to: risks
+      # Join: the summary waits for both branches.
+      - from: facts
+        to: summary
+      - from: risks
+        to: summary

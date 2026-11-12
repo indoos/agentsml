@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agentsml.org/schemas/agentsml-0.1.schema.json",
+  "$id": "https://agentsml.org/schemas/agentsml-0.2.schema.json",
   "title": "AgentsML",
   "type": "object",
   "required": ["agentsml", "kind", "metadata"],
@@ -8,7 +8,7 @@
   "properties": {
     "agentsml": {
       "type": "string",
-      "const": "0.1"
+      "enum": ["0.1", "0.2"]
     },
     "kind": {
       "type": "string",
