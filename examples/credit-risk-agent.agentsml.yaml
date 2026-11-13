@@ -13,10 +13,26 @@ profiles:
     - agentsml-core
     - agentsml-graph
     - agentsml-rag
+    - agentsml-mcp
     - agentsml-enterprise
     - agentsml-observability
   optional:
     - agentsml-ui
+mcp_servers:
+  income_verification_service:
+    description: Verification service for payroll and bank statements.
+    transport: stdio
+    command: python
+    args:
+      - -m
+      - services.income_mcp
+  policy_search_service:
+    description: Credit underwriting policy retrieval service.
+    transport: stdio
+    command: python
+    args:
+      - -m
+      - services.policy_mcp
 models:
   reasoning:
     provider: openai
@@ -105,6 +121,8 @@ tools:
   verify_income:
     description: Verify applicant income through payroll or bank-statement provider.
     source: mcp.tool
+    mcp_server: income_verification_service
+    mcp_tool_name: verify_income
     side_effect: external
     auth:
       secret_ref: income_verification_mcp
@@ -157,6 +175,8 @@ tools:
   search_credit_policy:
     description: Search underwriting policy, exception rules, and adverse action guidance.
     source: mcp.tool
+    mcp_server: policy_search_service
+    mcp_tool_name: search_credit_policy
     side_effect: read
     input_schema:
       type: object

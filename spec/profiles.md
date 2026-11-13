@@ -1,6 +1,6 @@
-# AgentsML Profile System Draft
+# AgentsML Profile System Specification
 
-Status: draft v0.2
+Status: Specification v0.2
 
 ## Purpose
 

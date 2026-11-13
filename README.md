@@ -6,29 +6,37 @@ The goal is to describe agent systems once and make them translatable across age
 
 ## Repository Contents
 
-- `spec/`: draft AgentsML specification chapters.
-- `schemas/`: machine-readable JSON Schema for AgentsML documents.
-- `examples/`: example AgentsML documents.
+- `docs/`: [Interactive Documentation & Web Playground](docs/index.html) — live visual graph renderer, target code generator, and specification explorer.
+- `spec/`: AgentsML specification chapters (object model, execution semantics, profiles, diagnostics, security, observability).
+- `schemas/`: Machine-readable JSON Schemas ([v0.2](schemas/v0.2/agentsml.schema.json), [v0.1](schemas/v0.1/agentsml.schema.json), and canonical [agentsml.schema.json](schemas/agentsml.schema.json)).
+- `examples/`: Validated example AgentsML documents (8 public examples).
 - `LICENSE`: MIT license and attribution notice.
 
 The separate workspace-level `../agentsml-ideation/` folder contains research, adapter planning, conformance planning, and spec regeneration material. It is not part of the public spec package itself.
 
 ## Current Version
 
-Draft version: `0.2`
+Specification version: `0.2.0`
 
-The schema accepts `0.1` and `0.2` documents.
+The canonical schema accepts both `0.1` and `0.2` documents.
 
-What `0.2` adds over `0.1`:
+What `0.2` provides:
 
-- A normative **condition grammar** for edge conditions: comparisons, boolean operators, parentheses, literals, and `input` / `state` / `steps` references. Expressions outside the grammar must be rejected rather than evaluated.
-- Definitions for **fan-out** (one step, two or more unconditional successors) and **joins** (one step, two or more unconditional predecessors), both requiring `agentsml-graph`.
-- A **step output** convention: a step whose output is read by a condition produces an object, and free text is stored as `{ "text": ... }`.
-- **Approval semantics**: the pause carries a payload, the resumed decision becomes a typed approval result, and a rejected decision must not execute the gated invocation.
+- A normative **condition grammar** for edge conditions and step expressions: comparisons (`==`, `!=`, `<`, `<=`, `>`, `>=`), boolean operators (`&&`, `||`, `!`), parentheses, literals, and references (`input`, `state`, `steps.<id>.output.<field>`).
+- Formalized **fan-out** (one step, two or more concurrent successors) and **joins** (`join: wait_all` / `join: wait_any`), both governed by `agentsml-graph`.
+- Protocol first-class citizens: **MCP** (`mcp_servers` configuration and `mcp_tool_name`), **A2A** (`a2a_agents` client bindings and `a2a_server` service exposure), and **AG-UI** streaming.
+- A **step output** convention: structured object output where conditions resolve nested fields.
+- **Approval semantics**: typed approval results with payload inspection and gate execution control.
 
-Schema:
+Schemas:
 
-- [schemas/agentsml.schema.json](schemas/agentsml.schema.json)
+- Canonical: [schemas/agentsml.schema.json](schemas/agentsml.schema.json)
+- Version 0.2: [schemas/v0.2/agentsml.schema.json](schemas/v0.2/agentsml.schema.json)
+- Version 0.1: [schemas/v0.1/agentsml.schema.json](schemas/v0.1/agentsml.schema.json)
+
+Interactive Playground:
+
+- Open [`docs/index.html`](docs/index.html) in any browser or deploy directly to GitHub Pages.
 
 Changelog:
 

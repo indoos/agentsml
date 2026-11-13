@@ -1,6 +1,6 @@
-# AgentsML Object Model Draft
+# AgentsML Object Model Specification
 
-Status: draft v0.2
+Status: Specification v0.2
 
 ## Top-Level Object
 
@@ -232,6 +232,8 @@ Fields:
 - `output`
 - `condition`
 - `depends_on`
+- `join`
+- `parallel`
 - `retry`
 - `approval`
 - `events`

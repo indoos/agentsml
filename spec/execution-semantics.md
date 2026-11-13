@@ -1,6 +1,6 @@
-# AgentsML Execution Semantics Draft
+# AgentsML Execution Semantics Specification
 
-Status: draft v0.2
+Status: Specification v0.2
 
 ## Run Lifecycle
 

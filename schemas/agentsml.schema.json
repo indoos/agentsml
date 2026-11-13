@@ -234,6 +234,19 @@
           "type": "array",
           "items": { "type": "string" }
         },
+        "join": {
+          "type": "string",
+          "enum": ["wait_all", "wait_any"]
+        },
+        "parallel": {
+          "oneOf": [
+            { "type": "boolean" },
+            {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          ]
+        },
         "retry": { "type": "object" },
         "timeout": { "type": ["number", "string"] },
         "approval": { "type": ["string", "object"] },

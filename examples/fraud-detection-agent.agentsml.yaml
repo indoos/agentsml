@@ -14,9 +14,25 @@ profiles:
     - agentsml-core
     - agentsml-graph
     - agentsml-rag
+    - agentsml-mcp
     - agentsml-ui
     - agentsml-enterprise
     - agentsml-observability
+mcp_servers:
+  device_intelligence_service:
+    description: Device and IP reputation intelligence MCP service.
+    transport: stdio
+    command: python
+    args:
+      - -m
+      - services.device_intel_mcp
+  playbook_service:
+    description: Fraud investigation playbooks MCP service.
+    transport: stdio
+    command: python
+    args:
+      - -m
+      - services.playbook_mcp
 models:
   realtime:
     provider: openai
@@ -108,6 +124,8 @@ tools:
   get_device_reputation:
     description: Check device fingerprint, emulator signals, and historical account links.
     source: mcp.tool
+    mcp_server: device_intelligence_service
+    mcp_tool_name: get_device_reputation
     side_effect: read
     input_schema:
       type: object
@@ -119,6 +137,8 @@ tools:
   get_ip_risk:
     description: Check IP geolocation, proxy/VPN risk, velocity, and abuse reports.
     source: mcp.tool
+    mcp_server: device_intelligence_service
+    mcp_tool_name: get_ip_risk
     side_effect: read
     input_schema:
       type: object
@@ -149,6 +169,8 @@ tools:
   search_fraud_playbooks:
     description: Search internal fraud playbooks, merchant watchlists, and escalation criteria.
     source: mcp.tool
+    mcp_server: playbook_service
+    mcp_tool_name: search_fraud_playbooks
     side_effect: read
     input_schema:
       type: object

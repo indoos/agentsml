@@ -14,10 +14,26 @@ profiles:
     - agentsml-core
     - agentsml-graph
     - agentsml-rag
+    - agentsml-mcp
     - agentsml-enterprise
     - agentsml-observability
   optional:
     - agentsml-ui
+mcp_servers:
+  media_search_service:
+    description: Adverse media news search service.
+    transport: stdio
+    command: python
+    args:
+      - -m
+      - services.media_mcp
+  compliance_policy_service:
+    description: Compliance and AML regulatory policy search service.
+    transport: stdio
+    command: python
+    args:
+      - -m
+      - services.compliance_policy_mcp
 models:
   analyst:
     provider: openai
@@ -104,6 +120,8 @@ tools:
   search_adverse_media:
     description: Search approved adverse-media sources and return citation-backed results.
     source: mcp.tool
+    mcp_server: media_search_service
+    mcp_tool_name: search_adverse_media
     side_effect: read
     input_schema:
       type: object
@@ -144,6 +162,8 @@ tools:
   search_compliance_policy:
     description: Search KYC, sanctions, EDD, and SAR filing policies.
     source: mcp.tool
+    mcp_server: compliance_policy_service
+    mcp_tool_name: search_compliance_policy
     side_effect: read
     input_schema:
       type: object
