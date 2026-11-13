@@ -68,9 +68,9 @@ The reference compiler lives in [`agentsml-impl`](../agentsml-impl/) and provide
 
 The compiler supports 31 targets across 5 waves with 0 scaffolds:
 
-- **11 External-Runtime Certified**: `langgraph`, `google-adk`, `pydantic-ai`, `openai-agents`, `smolagents`, `claude-agent-sdk`, `crewai`, `llamaindex`, `agno`, `mastra`, `vercel-ai`.
-- **9 Offline-Behavioral Certified**: `a2a`, `ucp`, `ap2`, `n8n`, `langflow`, `flowise`, `relevance-ai`, `zapier-agents`, `lyzr`.
-- **11 Structural Verified**: Cloud platforms (`vertex-agent-engine`, `bedrock-agentcore`, `databricks`, `microsoft-agent-framework`, `snowflake-cortex`, `spring-ai`) and frameworks (`ag2`, `langchain`, `strands-agents`, `mcp-server`, `ag-ui`).
+- **12 External-Runtime Certified**: `langgraph`, `google-adk`, `pydantic-ai`, `openai-agents`, `smolagents`, `claude-agent-sdk`, `crewai`, `llamaindex`, `ag2`, `agno`, `mastra`, `vercel-ai`.
+- **11 Offline-Behavioral Certified**: `a2a`, `ucp`, `ap2`, `mcp-server`, `ag-ui`, `n8n`, `langflow`, `flowise`, `relevance-ai`, `zapier-agents`, `lyzr`.
+- **8 Structural Verified**: Cloud platforms (`vertex-agent-engine`, `bedrock-agentcore`, `databricks`, `microsoft-agent-framework`, `snowflake-cortex`, `spring-ai`) and frameworks (`langchain`, `strands-agents`).
 
 ## License
 
