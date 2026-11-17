@@ -8,6 +8,8 @@ Additive and backward compatible; v0.2 documents validate unchanged. Schema: `sc
 
 ### Added
 
+- Execution semantics: tool approval and step retry/timeout/fallback mappings for OpenAI Agents, Google ADK, CrewAI and Mastra.
+
 - Typed step `retry` object (`max_attempts`, `backoff`, `initial_interval`, `max_interval`, `on_timeout`) and object form of step `approval`.
 - Step `fallback` object (`output`, `model`) giving `retry.on_timeout: fallback` a value or fallback model; `fallback.model` must reference a declared model.
 - Agent `reasoning` object (`effort`, `budget_tokens`, `expose_trace`).
