@@ -26,7 +26,7 @@ jobs:
         run: |
           python -c '
           import json, jsonschema
-          for path in ["schemas/agentsml.schema.json", "schemas/v0.1/agentsml.schema.json", "schemas/v0.2/agentsml.schema.json"]:
+          for path in ["schemas/agentsml.schema.json", "schemas/v0.1/agentsml.schema.json", "schemas/v0.2/agentsml.schema.json", "schemas/v0.3/agentsml.schema.json"]:
               with open(path) as f:
                   s = json.load(f)
               jsonschema.Draft202012Validator.check_schema(s)
@@ -37,17 +37,23 @@ jobs:
         run: |
           python -c '
           import glob, json, yaml, jsonschema
-          with open("schemas/v0.2/agentsml.schema.json") as f:
-              schema = json.load(f)
-          validator = jsonschema.Draft202012Validator(schema)
-          
+          import os
+          def validator_for(version):
+              # Validate each document against the schema for its declared version,
+              # falling back to the canonical schema for unknown versions.
+              path = f"schemas/v{version}/agentsml.schema.json"
+              if not os.path.exists(path):
+                  path = "schemas/agentsml.schema.json"
+              with open(path) as f:
+                  return jsonschema.Draft202012Validator(json.load(f))
+
           examples = glob.glob("examples/*.yaml")
-          assert len(examples) >= 8, f"Expected at least 8 examples, found {len(examples)}"
-          
+          assert len(examples) >= 9, f"Expected at least 9 examples, found {len(examples)}"
+
           for ex in sorted(examples):
               with open(ex) as f:
                   doc = yaml.safe_load(f)
-              errors = list(validator.iter_errors(doc))
+              errors = list(validator_for(str(doc.get("agentsml", ""))).iter_errors(doc))
               if errors:
                   print(f"✗ Failed: {ex}")
                   for err in errors:
