@@ -2,6 +2,18 @@
 
 All notable changes to the AgentsML specification are recorded here.
 
+## Draft 0.3 — unreleased
+
+Additive and backward compatible; v0.2 documents validate unchanged. Schema: `schemas/v0.3/agentsml.schema.json`; the canonical schema also accepts `agentsml: "0.3"`.
+
+### Added
+
+- Typed step `retry` object (`max_attempts`, `backoff`, `initial_interval`, `max_interval`, `on_timeout`) and object form of step `approval`.
+- Agent `reasoning` object (`effort`, `budget_tokens`, `expose_trace`).
+- Tool `needs_approval` and `approval_mode` (`always`, `once_per_session`, `per_arguments`).
+- Spec sections: object-model "Draft 0.3 additions", execution-semantics "Retry and timeout semantics (Draft 0.3)".
+- Example `examples/resilient-agent.agentsml.yaml`.
+
 ## Specification v0.2 — 2026-11-13
 
 ### Added

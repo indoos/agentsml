@@ -9,7 +9,7 @@ The goal is to describe agent systems once and make them translatable across age
 - `docs/`: [Interactive Documentation & Web Playground](docs/index.html) — live visual graph renderer, target code generator, and specification explorer.
 - `spec/`: AgentsML specification chapters (object model, execution semantics, profiles, diagnostics, security, observability).
 - `schemas/`: Machine-readable JSON Schemas ([v0.2](schemas/v0.2/agentsml.schema.json), [v0.1](schemas/v0.1/agentsml.schema.json), and canonical [agentsml.schema.json](schemas/agentsml.schema.json)).
-- `examples/`: Validated example AgentsML documents (8 public examples).
+- `examples/`: Validated example AgentsML documents (9 public examples).
 - `LICENSE`: MIT license and attribution notice.
 
 The separate workspace-level `../agentsml-ideation/` folder contains research, adapter planning, conformance planning, and spec regeneration material. It is not part of the public spec package itself.
@@ -19,6 +19,8 @@ The separate workspace-level `../agentsml-ideation/` folder contains research, a
 Specification version: `0.2.0`
 
 The canonical schema accepts both `0.1` and `0.2` documents.
+
+Draft `0.3` (unreleased, additive) is also accepted by the canonical schema and published under [schemas/v0.3](schemas/v0.3/agentsml.schema.json); see [CHANGELOG.md](CHANGELOG.md) for its contents.
 
 What `0.2` provides:
 
@@ -46,6 +48,7 @@ Changelog:
 
 - [simple-agent.agentsml.yaml](examples/simple-agent.agentsml.yaml) — Minimal single-agent document.
 - [branching-agent.agentsml.yaml](examples/branching-agent.agentsml.yaml) — Draft 0.2: conditional edges, fan-out, and join.
+- [resilient-agent.agentsml.yaml](examples/resilient-agent.agentsml.yaml) — Draft 0.3: step retry and timeout, agent reasoning, tool approval modes.
 - [credit-risk-agent.agentsml.yaml](examples/credit-risk-agent.agentsml.yaml) — Multi-agent credit risk analysis workflow.
 - [fraud-detection-agent.agentsml.yaml](examples/fraud-detection-agent.agentsml.yaml) — Fraud investigation with human-in-the-loop approval.
 - [kyc-aml-investigation-agent.agentsml.yaml](examples/kyc-aml-investigation-agent.agentsml.yaml) — KYC/AML investigation pipeline.
@@ -62,15 +65,16 @@ The reference compiler lives in [`agentsml-impl`](../agentsml-impl/) and provide
 - **`agentsml run <file> -t <target> -q "<query>"`**: Compile and execute against target runtimes.
 - **`agentsml validate <file>`**: Schema and semantic validation with diagnostic reports.
 - **`agentsml doctor <file> -t <target>`**: Target compatibility analysis and capability reporting.
+- **`agentsml explain-target <target>`**: Show a target's capability manifest and diagnostics for a document.
 - **`agentsml list-targets`**: List all 31 compilation targets with wave, level, maturity, and certification.
 
 ### Target Support Matrix
 
 The compiler supports 31 targets across 5 waves with 0 scaffolds:
 
-- **12 External-Runtime Certified**: `langgraph`, `google-adk`, `pydantic-ai`, `openai-agents`, `smolagents`, `claude-agent-sdk`, `crewai`, `llamaindex`, `ag2`, `agno`, `mastra`, `vercel-ai`.
-- **11 Offline-Behavioral Certified**: `a2a`, `ucp`, `ap2`, `mcp-server`, `ag-ui`, `n8n`, `langflow`, `flowise`, `relevance-ai`, `zapier-agents`, `lyzr`.
-- **8 Structural Verified**: Cloud platforms (`vertex-agent-engine`, `bedrock-agentcore`, `databricks`, `microsoft-agent-framework`, `snowflake-cortex`, `spring-ai`) and frameworks (`langchain`, `strands-agents`).
+- **15 External-Runtime Certified**: `langgraph`, `google-adk`, `pydantic-ai`, `openai-agents`, `smolagents`, `claude-agent-sdk`, `crewai`, `llamaindex`, `ag2`, `agno`, `mastra`, `vercel-ai`, `langchain`, `strands-agents`, `microsoft-agent-framework`.
+- **16 Offline-Behavioral Certified**: `a2a`, `ucp`, `ap2`, `mcp-server`, `ag-ui`, `n8n`, `langflow`, `flowise`, `relevance-ai`, `zapier-agents`, `lyzr`, `vertex-agent-engine`, `bedrock-agentcore`, `databricks`, `spring-ai`, `snowflake-cortex`.
+- **0 Structural-only targets**: every registered target has behavioral or runtime evidence.
 
 ## License
 

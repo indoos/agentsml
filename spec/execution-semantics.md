@@ -103,6 +103,17 @@ AgentsML distinguishes:
 
 Compilers must not silently collapse these categories when a target treats them differently.
 
+## Retry and timeout semantics (Draft 0.3)
+
+A step `retry` policy governs workflow step retry only.
+
+- **Attempt counting**: `max_attempts` counts all attempts including the first; `max_attempts: 1` means no retry. `timeout` applies to each attempt separately.
+- **Backoff**: the delay before attempt n+1 is `initial_interval` for `none` and `linear` (linear adds `initial_interval` per attempt), `initial_interval * 2^(n-1)` for `exponential`, capped by `max_interval`. Backoff is a compiler-implemented policy: no framework exposes declarative step-level backoff, so targets without native support must emit `lossy_mapping` and may approximate.
+- **`on_timeout`**: `error` fails the attempt (and is retried while attempts remain); `return_to_model` returns a timeout result to the calling model instead of failing; `fallback` runs the declared model fallback. Targets without the behaviour must emit `lossy_mapping`.
+- **Approvals**: time spent waiting for human approval does not count against `timeout` and a pending approval is never retried. A rejected approval is final and does not consume attempts. Retries of a gated step re-use the existing approval decision unless the tool `approval_mode` is `always`.
+- **Tool approval**: a tool's `needs_approval` / `approval_mode` is honoured only by targets whose manifest declares `tool_approval: native|adapter`. Targets that cannot enforce tool approval must emit `lossy_mapping` (the compiler emits it per tool), and the author must gate the tool manually; declaring `needs_approval` satisfies the unsafe-side-effect check but does not by itself guarantee enforcement.
+- **Unsupported targets**: a target manifest declares `retry` (and `reasoning`) support; absence is treated as lossy and produces `lossy_mapping` diagnostics.
+
 ## Interrupts And Human Approval
 
 Human approval pauses a run with:

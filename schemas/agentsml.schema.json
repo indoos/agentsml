@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agentsml.org/schemas/agentsml-0.2.schema.json",
+  "$id": "https://agentsml.org/schemas/agentsml.schema.json",
   "title": "AgentsML",
   "type": "object",
   "required": ["agentsml", "kind", "metadata"],
@@ -8,7 +8,7 @@
   "properties": {
     "agentsml": {
       "type": "string",
-      "enum": ["0.1", "0.2"]
+      "enum": ["0.1", "0.2", "0.3"]
     },
     "kind": {
       "type": "string",
@@ -140,7 +140,9 @@
           "enum": ["read", "write", "delete", "payment", "browser", "external", "unknown"]
         },
         "timeout": { "type": ["number", "string"] },
-        "error_policy": { "type": "object" }
+        "error_policy": { "type": "object" },
+        "needs_approval": { "type": "boolean" },
+        "approval_mode": { "type": "string", "enum": ["always", "once_per_session", "per_arguments"], "default": "always" }
       }
     },
     "resource": {
@@ -189,6 +191,15 @@
         "memory": { "type": "object" },
         "knowledge": { "type": "object" },
         "output_schema": { "type": "object" },
+        "reasoning": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "effort": { "type": "string", "enum": ["off", "low", "medium", "high"] },
+            "budget_tokens": { "type": "integer", "minimum": 0 },
+            "expose_trace": { "type": "boolean" }
+          }
+        },
         "policies": {
           "type": "array",
           "items": { "type": "string" }
@@ -247,9 +258,31 @@
             }
           ]
         },
-        "retry": { "type": "object" },
+        "retry": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "max_attempts": { "type": "integer", "minimum": 1 },
+            "backoff": { "type": "string", "enum": ["none", "linear", "exponential"] },
+            "initial_interval": { "type": ["string", "number"] },
+            "max_interval": { "type": ["string", "number"] },
+            "on_timeout": { "type": "string", "enum": ["error", "return_to_model", "fallback"], "default": "error" }
+          }
+        },
         "timeout": { "type": ["number", "string"] },
-        "approval": { "type": ["string", "object"] },
+        "approval": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "required": { "type": "boolean" },
+                "approvers": { "type": "array", "items": { "type": "string" } },
+                "timeout": { "type": ["string", "number"] }
+              }
+            }
+          ]
+        },
         "events": {
           "type": "array",
           "items": {

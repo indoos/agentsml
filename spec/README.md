@@ -15,7 +15,7 @@ Specification chapters:
 
 - [`object-model.md`](object-model.md) — Portable agent system declarations and core object model.
 - [`execution-semantics.md`](execution-semantics.md) — Run lifecycle, branching, graph fan-out/joins, approvals, and condition grammar.
-- [`profiles.md`](profiles.md) — Capability profiles (`core`, `graph`, `mcp`, `a2a`, `ui`, `rag`, `payments`).
+- [`profiles.md`](profiles.md) — Capability profiles (11 profiles: core, graph, conversation, rag, mcp, a2a, ui, commerce, payments, enterprise, observability).
 - [`diagnostics.md`](diagnostics.md) — Standard diagnostic codes and error handling contracts.
 - [`security-permissions.md`](security-permissions.md) — Tool permissions, side-effect controls, and human-in-the-loop policies.
 - [`observability.md`](observability.md) — Normalized event telemetry and trace mappings.

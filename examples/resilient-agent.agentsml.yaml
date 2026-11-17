@@ -1,0 +1,95 @@
+agentsml: "0.3"
+kind: AgentSystem
+metadata:
+  name: resilient-refund-agent
+  version: 0.1.0
+  description: Draft 0.3 example with step retry and timeout, agent reasoning, and tool-level approval.
+profiles:
+  - agentsml-core
+  - agentsml-graph
+models:
+  default:
+    provider: openai
+    name: gpt-5.1
+    parameters:
+      temperature: 0.1
+tools:
+  issue_refund:
+    description: Issue a refund to the customer's original payment method.
+    source: local.function
+    input_schema:
+      type: object
+      properties:
+        order_id:
+          type: string
+        amount:
+          type: number
+      required:
+        - order_id
+        - amount
+    output_schema:
+      type: object
+      properties:
+        refund_id:
+          type: string
+      required:
+        - refund_id
+    side_effect: payment
+    needs_approval: true
+    approval_mode: per_arguments
+agents:
+  analyst:
+    description: Assesses whether a refund request is justified.
+    role: analyst
+    model: default
+    instructions: Review the refund request and summarize whether it meets policy.
+    reasoning:
+      effort: medium
+      budget_tokens: 4096
+      expose_trace: false
+  refunder:
+    description: Issues approved refunds.
+    role: operator
+    model: default
+    instructions: Issue the refund for the approved order using the refund tool.
+    tools:
+      - issue_refund
+workflows:
+  main:
+    description: Assess a refund request, then issue the refund after approval.
+    input_schema:
+      type: object
+      properties:
+        request:
+          type: string
+      required:
+        - request
+    steps:
+      - id: assess
+        agent: analyst
+        timeout: 60s
+        retry:
+          max_attempts: 3
+          backoff: exponential
+          initial_interval: 2s
+          max_interval: 30s
+          on_timeout: return_to_model
+        input:
+          request: ${input.request}
+      - id: manager_review
+        approval:
+          required: true
+          approvers:
+            - refund_manager
+          timeout: 24h
+        depends_on:
+          - assess
+      - id: refund
+        agent: refunder
+        timeout: 120
+        retry:
+          max_attempts: 2
+          backoff: linear
+          initial_interval: 5
+        depends_on:
+          - manager_review

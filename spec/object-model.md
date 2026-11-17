@@ -149,6 +149,11 @@ Fields:
 - `timeout`
 - `error_policy`
 
+### `tool` Draft 0.3 additions
+
+- `needs_approval` (boolean): the tool should not run without human approval. Satisfies the unsafe-side-effect approval check; a target that cannot enforce the gate must emit `lossy_mapping` so the author wires it manually.
+- `approval_mode` (enum `always`, `once_per_session`, `per_arguments`; default `always`): how often approval is requested. `always` asks on every call, `once_per_session` remembers one approval for the rest of the session, `per_arguments` remembers approval for identical argument values. Targets that cannot honour the mode must approximate with `always` and emit `lossy_mapping`.
+
 Tool sources:
 
 - `local.function`
@@ -157,6 +162,10 @@ Tool sources:
 - `asyncapi.operation`
 - `builtin`
 - `target.native`
+
+### `agent` Draft 0.3 additions
+
+- `reasoning` (object, no other keys): `effort` (`off`, `low`, `medium`, `high`), `budget_tokens` (integer >= 0) and `expose_trace` (boolean). Reasoning is provider-mapped: there is no framework-level primitive, so targets translate it to model-provider settings and must emit `lossy_mapping` for fields they cannot apply.
 
 ## `resource`
 
@@ -237,6 +246,12 @@ Fields:
 - `retry`
 - `approval`
 - `events`
+
+### `step` Draft 0.3 additions
+
+- `retry` (object, no other keys): `max_attempts` (integer >= 1, total attempts including the first), `backoff` (`none`, `linear`, `exponential`), `initial_interval` and `max_interval` (duration string such as `2s` or number of seconds), `on_timeout` (`error`, `return_to_model`, `fallback`; default `error`). See "Retry and timeout semantics (Draft 0.3)" in execution-semantics.md.
+- `timeout` (string or number): wall-clock limit for one attempt of the step.
+- `approval` may be a string or an object with `required` (boolean), `approvers` (list of strings) and `timeout` (string or number); existing v0.2 approval objects remain valid.
 
 A step should call exactly one primary target: `agent`, `tool`, `workflow`, `a2a_agent`, or approval-only `approval`.
 

@@ -25,6 +25,8 @@ Diagnostics make portability honest.
 - `unsafe_side_effect`
 - `nonportable_expression`
 - `target_version_unknown`
+- `target_not_implemented`
+- `generation_failed`
 
 ## Diagnostic Shape
 
