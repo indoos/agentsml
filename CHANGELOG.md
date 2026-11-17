@@ -9,6 +9,7 @@ Additive and backward compatible; v0.2 documents validate unchanged. Schema: `sc
 ### Added
 
 - Typed step `retry` object (`max_attempts`, `backoff`, `initial_interval`, `max_interval`, `on_timeout`) and object form of step `approval`.
+- Step `fallback` object (`output`, `model`) giving `retry.on_timeout: fallback` a value or fallback model; `fallback.model` must reference a declared model.
 - Agent `reasoning` object (`effort`, `budget_tokens`, `expose_trace`).
 - Tool `needs_approval` and `approval_mode` (`always`, `once_per_session`, `per_arguments`).
 - Spec sections: object-model "Draft 0.3 additions", execution-semantics "Retry and timeout semantics (Draft 0.3)".

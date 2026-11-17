@@ -270,6 +270,16 @@
           }
         },
         "timeout": { "type": ["number", "string"] },
+        "fallback": {
+          "type": "object",
+          "description": "Draft 0.3. Value or model used when retry.on_timeout is 'fallback'. At least one of output or model is required.",
+          "additionalProperties": false,
+          "properties": {
+            "output": { "description": "Static JSON value returned as the step output." },
+            "model": { "type": "string", "description": "Key of a declared model used to re-run the step." }
+          },
+          "anyOf": [ { "required": ["output"] }, { "required": ["model"] } ]
+        },
         "approval": {
           "oneOf": [
             { "type": "string" },

@@ -73,7 +73,11 @@ workflows:
           backoff: exponential
           initial_interval: 2s
           max_interval: 30s
-          on_timeout: return_to_model
+          on_timeout: fallback
+        fallback:
+          output:
+            summary: Assessment timed out; route to manual review.
+            eligible: false
         input:
           request: ${input.request}
       - id: manager_review

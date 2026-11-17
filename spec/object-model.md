@@ -251,6 +251,7 @@ Fields:
 
 - `retry` (object, no other keys): `max_attempts` (integer >= 1, total attempts including the first), `backoff` (`none`, `linear`, `exponential`), `initial_interval` and `max_interval` (duration string such as `2s` or number of seconds), `on_timeout` (`error`, `return_to_model`, `fallback`; default `error`). See "Retry and timeout semantics (Draft 0.3)" in execution-semantics.md.
 - `timeout` (string or number): wall-clock limit for one attempt of the step.
+- `fallback` (object, no other keys; at least one of the two fields): used when `retry.on_timeout` is `fallback`. `output` (any JSON value) is returned as the step output; `model` (string) is the key of a declared model used to re-run the step. When both are given, `output` takes precedence. An undefined `fallback.model` is a validation error.
 - `approval` may be a string or an object with `required` (boolean), `approvers` (list of strings) and `timeout` (string or number); existing v0.2 approval objects remain valid.
 
 A step should call exactly one primary target: `agent`, `tool`, `workflow`, `a2a_agent`, or approval-only `approval`.
