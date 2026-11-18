@@ -2,6 +2,16 @@
 
 All notable changes to the AgentsML specification are recorded here.
 
+## 0.3.1 — 2026-11-18
+
+Specification version: `0.3.1` (clarifications; no schema content change).
+
+### Changed
+
+- JSON Schema `$id` values now use the published GitHub Pages URLs under `https://indoos.github.io/agentsml/schemas/` (canonical: `.../schemas/agentsml.schema.json`; versioned: `.../schemas/v0.1/`, `v0.2/`, `v0.3/` `agentsml.schema.json`). The previous `https://agentsml.org/...` identifiers did not resolve. Schema content is otherwise unchanged; all `$ref`s are fragment-only and unaffected.
+- Schemas are published to `docs/schemas/` by `scripts/publish_schemas.py` (`--check` runs in CI), and the Pages deploy workflow now also triggers on `schemas/**`. Version index: `docs/schemas/index.html`.
+- Execution semantics: tool `timeout` bounds the tool body only (approval wait excluded); on expiry the model receives `tool <name> timed out after <n>s` and the run continues.
+
 ## 0.3.0 — 2026-11-17
 
 Specification version: `0.3.0`

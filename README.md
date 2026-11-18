@@ -78,6 +78,8 @@ The compiler supports 31 targets across 5 waves with 0 scaffolds:
 - **16 Offline-Behavioral Certified**: `a2a`, `ucp`, `ap2`, `mcp-server`, `ag-ui`, `n8n`, `langflow`, `flowise`, `relevance-ai`, `zapier-agents`, `lyzr`, `vertex-agent-engine`, `bedrock-agentcore`, `databricks`, `spring-ai`, `snowflake-cortex`.
 - **0 Structural-only targets**: every registered target has behavioral or runtime evidence.
 
+Contributing: see [CONTRIBUTING.md](CONTRIBUTING.md) for how to propose a spec change.
+
 ## License
 
 MIT License.

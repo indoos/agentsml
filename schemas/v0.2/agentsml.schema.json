@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agentsml.org/schemas/agentsml-0.2.schema.json",
+  "$id": "https://indoos.github.io/agentsml/schemas/v0.2/agentsml.schema.json",
   "title": "AgentsML",
   "type": "object",
   "required": ["agentsml", "kind", "metadata"],

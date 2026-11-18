@@ -33,6 +33,9 @@ jobs:
               print(f"✓ Valid schema: {path}")
           '
 
+      - name: Check published schemas match schemas/
+        run: python3 scripts/publish_schemas.py --check
+
       - name: Validate Example Documents
         run: |
           python -c '

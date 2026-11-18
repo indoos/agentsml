@@ -1,0 +1,43 @@
+name: Spec change
+description: Propose a change to the AgentsML specification, schema or examples.
+labels: ["spec"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can a spec author not express today, or what is ambiguous?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed semantics
+      description: Describe the new or changed fields and their meaning. Include a small YAML snippet if you can.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: chapters
+    attributes:
+      label: Affected chapters, schema and profiles
+      description: "For example `spec/execution-semantics.md`, `schemas/agentsml.schema.json`, profile `agentsml-graph`."
+    validations:
+      required: true
+  - type: dropdown
+    id: compat
+    attributes:
+      label: Compatibility
+      options:
+        - Additive (existing 0.1, 0.2 and 0.3 documents still validate)
+        - Breaking (needs a new spec version)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: targets
+    attributes:
+      label: Targets affected
+      description: Which compiler targets would need to change? Leave blank if unknown.
+    validations:
+      required: false
