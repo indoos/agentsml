@@ -2,20 +2,27 @@
 
 All notable changes to the AgentsML specification are recorded here.
 
-## Draft 0.3 — unreleased
+## 0.3.0 — 2026-11-17
+
+Specification version: `0.3.0`
 
 Additive and backward compatible; v0.2 documents validate unchanged. Schema: `schemas/v0.3/agentsml.schema.json`; the canonical schema also accepts `agentsml: "0.3"`.
 
 ### Added
 
-- Execution semantics: tool approval and step retry/timeout/fallback mappings for OpenAI Agents, Google ADK, CrewAI and Mastra.
+- Execution semantics: tool approval and step retry/timeout/fallback mappings for the 15 targets that declare them.
 
 - Typed step `retry` object (`max_attempts`, `backoff`, `initial_interval`, `max_interval`, `on_timeout`) and object form of step `approval`.
 - Step `fallback` object (`output`, `model`) giving `retry.on_timeout: fallback` a value or fallback model; `fallback.model` must reference a declared model.
 - Agent `reasoning` object (`effort`, `budget_tokens`, `expose_trace`).
 - Tool `needs_approval` and `approval_mode` (`always`, `once_per_session`, `per_arguments`).
-- Spec sections: object-model "Draft 0.3 additions", execution-semantics "Retry and timeout semantics (Draft 0.3)".
+- Spec sections: object-model "Additions in v0.3", execution-semantics "Retry and timeout semantics (v0.3)".
 - Example `examples/resilient-agent.agentsml.yaml`.
+- Target support (per each target's `capabilities.yaml` in agentsml-impl; 15 of the 31 targets declare these features, the rest, including spring-ai and the cloud and export targets, do not and emit `lossy_mapping`):
+  - Tool approval: native in LangGraph, LangChain, OpenAI Agents, Google ADK, Agno; adapter in AG2, Claude Agent SDK, CrewAI, LlamaIndex, Mastra, Microsoft Agent Framework, PydanticAI, smolagents, Strands Agents, Vercel AI SDK.
+  - Step retry: native in LangGraph and Mastra; adapter in the other 13.
+  - `on_timeout` (timeout and fallback): native in LangGraph; adapter in the other 14.
+  - Agent reasoning: native in AG2, Agno, Claude Agent SDK, Google ADK, LangChain, LlamaIndex, Microsoft Agent Framework, OpenAI Agents, PydanticAI, Strands Agents; adapter in CrewAI, LangGraph, Mastra, smolagents, Vercel AI SDK.
 
 ## Specification v0.2 — 2026-11-13
 

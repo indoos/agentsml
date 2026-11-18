@@ -3,7 +3,7 @@ kind: AgentSystem
 metadata:
   name: resilient-refund-agent
   version: 0.1.0
-  description: Draft 0.3 example with step retry and timeout, agent reasoning, and tool-level approval.
+  description: v0.3 example with step retry and timeout, agent reasoning, and tool-level approval.
 profiles:
   - agentsml-core
   - agentsml-graph

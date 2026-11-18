@@ -4,6 +4,8 @@ AgentsML is a portable, declarative specification for defining agents, tools, me
 
 The goal is to describe agent systems once and make them translatable across agent frameworks, runtimes, and interoperability protocols.
 
+**Getting started:** the [quickstart](docs/quickstart.md) installs the CLI and takes you from one small agent document to a running LangGraph project, and the [tutorial](docs/tutorial-one-spec-many-frameworks.md) compiles one spec with tools, workflows, and v0.3 features to five frameworks.
+
 ## Repository Contents
 
 - `docs/`: [Interactive Documentation & Web Playground](docs/index.html) — live visual graph renderer, target code generator, and specification explorer.
@@ -20,7 +22,7 @@ Specification version: `0.2.0`
 
 The canonical schema accepts both `0.1` and `0.2` documents.
 
-Draft `0.3` (unreleased, additive) is also accepted by the canonical schema and published under [schemas/v0.3](schemas/v0.3/agentsml.schema.json); see [CHANGELOG.md](CHANGELOG.md) for its contents.
+Version `0.3` (released 2026-11-17, additive) is the current version and is published under [schemas/v0.3](schemas/v0.3/agentsml.schema.json); the canonical schema also still accepts `0.1` and `0.2` documents. See [CHANGELOG.md](CHANGELOG.md) for its contents.
 
 What `0.2` provides:
 
@@ -48,7 +50,7 @@ Changelog:
 
 - [simple-agent.agentsml.yaml](examples/simple-agent.agentsml.yaml) — Minimal single-agent document.
 - [branching-agent.agentsml.yaml](examples/branching-agent.agentsml.yaml) — Draft 0.2: conditional edges, fan-out, and join.
-- [resilient-agent.agentsml.yaml](examples/resilient-agent.agentsml.yaml) — Draft 0.3: step retry and timeout, agent reasoning, tool approval modes.
+- [resilient-agent.agentsml.yaml](examples/resilient-agent.agentsml.yaml) — v0.3: step retry and timeout, agent reasoning, tool approval modes.
 - [credit-risk-agent.agentsml.yaml](examples/credit-risk-agent.agentsml.yaml) — Multi-agent credit risk analysis workflow.
 - [fraud-detection-agent.agentsml.yaml](examples/fraud-detection-agent.agentsml.yaml) — Fraud investigation with human-in-the-loop approval.
 - [kyc-aml-investigation-agent.agentsml.yaml](examples/kyc-aml-investigation-agent.agentsml.yaml) — KYC/AML investigation pipeline.

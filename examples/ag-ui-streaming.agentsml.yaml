@@ -1,4 +1,4 @@
-agentsml: "0.1"
+agentsml: "0.3"
 kind: AgentSystem
 metadata:
   name: ag-ui-streaming-agent
