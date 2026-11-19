@@ -26,7 +26,7 @@ jobs:
         run: |
           python -c '
           import json, jsonschema
-          for path in ["schemas/agentsml.schema.json", "schemas/v0.1/agentsml.schema.json", "schemas/v0.2/agentsml.schema.json", "schemas/v0.3/agentsml.schema.json"]:
+          for path in ["schemas/agentsml.schema.json", "schemas/v0.1/agentsml.schema.json", "schemas/v0.2/agentsml.schema.json", "schemas/v0.3/agentsml.schema.json", "schemas/v0.4/agentsml.schema.json"]:
               with open(path) as f:
                   s = json.load(f)
               jsonschema.Draft202012Validator.check_schema(s)
@@ -51,7 +51,7 @@ jobs:
                   return jsonschema.Draft202012Validator(json.load(f))
 
           examples = glob.glob("examples/*.yaml")
-          assert len(examples) >= 9, f"Expected at least 9 examples, found {len(examples)}"
+          assert len(examples) >= 10, f"Expected at least 9 examples, found {len(examples)}"
 
           for ex in sorted(examples):
               with open(ex) as f:

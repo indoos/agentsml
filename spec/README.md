@@ -6,6 +6,8 @@ Companion artifacts:
 
 - Schemas:
   - Canonical: [`../schemas/agentsml.schema.json`](../schemas/agentsml.schema.json)
+  - Version 0.4 (Draft): [`../schemas/v0.4/agentsml.schema.json`](../schemas/v0.4/agentsml.schema.json)
+  - Version 0.3: [`../schemas/v0.3/agentsml.schema.json`](../schemas/v0.3/agentsml.schema.json)
   - Version 0.2: [`../schemas/v0.2/agentsml.schema.json`](../schemas/v0.2/agentsml.schema.json)
   - Version 0.1: [`../schemas/v0.1/agentsml.schema.json`](../schemas/v0.1/agentsml.schema.json)
 - Examples: [`../examples/`](../examples/)

@@ -8,7 +8,7 @@
   "properties": {
     "agentsml": {
       "type": "string",
-      "enum": ["0.1", "0.2", "0.3"]
+      "enum": ["0.1", "0.2", "0.3", "0.4"]
     },
     "kind": {
       "type": "string",
@@ -142,7 +142,13 @@
         "timeout": { "type": ["number", "string"] },
         "error_policy": { "type": "object" },
         "needs_approval": { "type": "boolean" },
-        "approval_mode": { "type": "string", "enum": ["always", "once_per_session", "per_arguments"], "default": "always" }
+        "approval_mode": { "type": "string", "enum": ["always", "once_per_session", "per_arguments"], "default": "always" },
+        "isolation": {
+          "type": "string",
+          "enum": ["thread", "process"],
+          "default": "thread",
+          "description": "Draft 0.4. Where the tool body runs. `thread` (default) keeps v0.3 behavior: a timed-out synchronous body may keep running in the background and its result is discarded. `process` runs the body in a separate OS process (arguments and results must be JSON-serializable); when `timeout` expires the process is terminated so side effects stop. Valid without `timeout`. Targets that cannot isolate must report lossy_mapping."
+        }
       }
     },
     "resource": {
@@ -191,6 +197,37 @@
         "memory": { "type": "object" },
         "knowledge": { "type": "object" },
         "output_schema": { "type": "object" },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Draft 0.4. Per-invocation execution limits for the agent.",
+          "properties": {
+            "max_turns": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Maximum number of model requests the agent may make in one invocation, counting every model call including those triggered by tool results. Exceeding it fails the invocation with error kind `limit_exceeded`, which is not retried; the step `fallback` applies. Approval waits do not count."
+            }
+          }
+        },
+        "handoffs": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Draft 0.4. Agents this agent may transfer control to during its run. The receiving agent continues the same conversation and its final output becomes the output of the step that invoked the original agent. Every key must be a defined agent and may not be the agent itself.",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "required": ["agent"],
+                "additionalProperties": false,
+                "properties": {
+                  "agent": { "type": "string", "description": "Key of a defined agent." },
+                  "description": { "type": "string", "description": "When the agent should hand off to this target." }
+                }
+              }
+            ]
+          }
+        },
         "reasoning": {
           "type": "object",
           "additionalProperties": false,

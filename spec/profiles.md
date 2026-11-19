@@ -40,7 +40,7 @@ profiles:
 
 ### `agentsml-core`
 
-Includes agents, models, tools, resources, prompts, schemas, simple workflows, state, handoffs, approvals, artifacts, events, and diagnostics.
+Includes agents, models, tools, resources, prompts, schemas, simple workflows, state, handoffs, approvals, artifacts, events, and diagnostics. Draft 0.4 `agents.<k>.handoffs`, `agents.<k>.limits` and `tools.<k>.isolation` are part of this profile; targets without them emit `lossy_mapping`.
 
 ### `agentsml-graph`
 

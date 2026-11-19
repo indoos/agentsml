@@ -11,7 +11,7 @@ the workspace layout; otherwise see each repo's README).
 | Path | What it is | Generated? |
 |---|---|---|
 | `spec/*.md` | Specification chapters | No |
-| `schemas/agentsml.schema.json` | Canonical JSON Schema (Draft 2020-12). Accepts `agentsml: "0.1"`, `"0.2"`, `"0.3"`. | No |
+| `schemas/agentsml.schema.json` | Canonical JSON Schema (Draft 2020-12). Accepts `agentsml: "0.1"`, `"0.2"`, `"0.3"`, `"0.4"`. | No |
 | `schemas/vX.Y/agentsml.schema.json` | Versioned schema for one spec version | Copied from canonical, then edited |
 | `examples/*.agentsml.yaml` | Validated example documents (CI requires at least 9) | No |
 | `docs/index.html` | Interactive docs and playground | **Yes**, by `agentsml-ideation/scripts/build_docs_site.py` |

@@ -1,0 +1,87 @@
+agentsml: "0.4"
+kind: AgentSystem
+metadata:
+  name: support-triage
+  version: 0.1.0
+  description: Draft 0.4 example with agent turn limits, handoffs and a process-isolated tool.
+profiles:
+  - agentsml-core
+models:
+  default:
+    provider: openai
+    name: gpt-5.1
+    parameters:
+      temperature: 0.1
+tools:
+  run_diagnostics:
+    description: Run a diagnostic script against the customer's account.
+    source: local.function
+    input_schema:
+      type: object
+      properties:
+        account_id:
+          type: string
+      required:
+        - account_id
+    output_schema:
+      type: object
+      properties:
+        report:
+          type: string
+      required:
+        - report
+    side_effect: read
+    timeout: 30s
+    isolation: process
+agents:
+  triage:
+    description: First-line agent that routes a support request.
+    role: triage
+    model: default
+    instructions: Answer simple questions directly; hand off billing or technical problems.
+    limits:
+      max_turns: 6
+    handoffs:
+      - billing
+      - agent: technical
+        description: Hand off when the issue needs account diagnostics.
+  billing:
+    description: Resolves billing questions.
+    role: billing
+    model: default
+    instructions: Resolve the billing question and return a final answer.
+    limits:
+      max_turns: 4
+  technical:
+    description: Diagnoses technical problems.
+    role: technical
+    model: default
+    instructions: Run diagnostics for the account and return a final answer.
+    tools:
+      - run_diagnostics
+    limits:
+      max_turns: 8
+    handoffs:
+      - triage
+workflows:
+  main:
+    description: Triage a support request.
+    input_schema:
+      type: object
+      properties:
+        request:
+          type: string
+      required:
+        - request
+    steps:
+      - id: handle
+        agent: triage
+        retry:
+          max_attempts: 2
+          backoff: linear
+          initial_interval: 2s
+        fallback:
+          output:
+            answer: Unable to resolve automatically; routed to a human agent.
+        input:
+          request: ${input.request}

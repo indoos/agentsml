@@ -28,6 +28,8 @@ Diagnostics make portability honest.
 - `target_not_implemented`
 - `generation_failed`
 
+Draft 0.4 introduces no new diagnostic codes: a handoff to an undefined agent or to the agent itself is reported as `ambiguous_reference` (error), and targets that cannot honour `handoffs`, `limits` or tool `isolation` report `lossy_mapping`. The runtime error kind `limit_exceeded` (agent `limits.max_turns` exceeded) is an execution error, not a compile-time diagnostic.
+
 ## Diagnostic Shape
 
 ```yaml
