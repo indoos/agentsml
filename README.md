@@ -87,6 +87,6 @@ Contributing: see [CONTRIBUTING.md](CONTRIBUTING.md) for how to propose a spec c
 
 MIT License.
 
-Copyright (c) 2026 Impetus Technologies
+Copyright (c) 2026 Sanjay Sharma
 
 Author: Sanjay Sharma
