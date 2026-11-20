@@ -12,7 +12,7 @@ The goal is to describe agent systems once and make them translatable across age
 - `spec/`: AgentsML specification chapters (object model, execution semantics, profiles, diagnostics, security, observability).
 - `schemas/`: Machine-readable JSON Schemas ([v0.2](schemas/v0.2/agentsml.schema.json), [v0.1](schemas/v0.1/agentsml.schema.json), and canonical [agentsml.schema.json](schemas/agentsml.schema.json)).
 - `examples/`: Validated example AgentsML documents (9 public examples).
-- `LICENSE`: MIT license and attribution notice.
+- `LICENSE`: standard MIT license.
 
 The separate workspace-level `../agentsml-ideation/` folder contains research, adapter planning, conformance planning, and spec regeneration material. It is not part of the public spec package itself.
 
@@ -87,6 +87,4 @@ Contributing: see [CONTRIBUTING.md](CONTRIBUTING.md) for how to propose a spec c
 
 MIT License.
 
-Copyright (c) 2026 Impetus Technologies
-
-Author: Sanjay Sharma
+Copyright (c) 2026 Sanjay Sharma
