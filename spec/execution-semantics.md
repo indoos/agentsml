@@ -120,7 +120,7 @@ A step `retry` policy governs workflow step retry only.
   - Workflow-step `approval` is separate and is not enforced by tool gates; for example Google ADK still needs a custom callback or external gate for it.
 - **Unsupported targets**: a target manifest declares `retry` (and `reasoning`) support; absence is treated as lossy and produces `lossy_mapping` diagnostics.
 
-## Limits, handoffs and tool isolation (Draft 0.4)
+## Limits, handoffs and tool isolation (v0.4)
 
 - **`limits.max_turns`**: the number of model requests one invocation of the agent may make, counting every model call including those triggered by tool results. Time spent waiting for approval does not count. When the limit would be exceeded the invocation fails with an error of kind `limit_exceeded`. This is a step failure, but `limit_exceeded` is never retried: step `retry` does not apply to it. The step `fallback` (`output` or `model`) applies as for any other failed step.
 - **`handoffs`**: during its run the agent may transfer control to one listed agent. The receiving agent continues the same conversation (it sees the prior messages) and its final output becomes the output of the step that invoked the original agent. Handoff targets need not appear as workflow steps. A handoff counts as a turn of the receiving agent for that agent's own `limits`. Every referenced key must be a defined agent (otherwise the compiler reports `ambiguous_reference`) and an agent may not hand off to itself. Cycles between agents are allowed and are bounded by `limits`.

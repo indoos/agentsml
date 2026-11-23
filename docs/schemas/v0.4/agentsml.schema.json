@@ -147,7 +147,7 @@
           "type": "string",
           "enum": ["thread", "process"],
           "default": "thread",
-          "description": "Draft 0.4. Where the tool body runs. `thread` (default) keeps v0.3 behavior: a timed-out synchronous body may keep running in the background and its result is discarded. `process` runs the body in a separate OS process (arguments and results must be JSON-serializable); when `timeout` expires the process is terminated so side effects stop. Valid without `timeout`. Targets that cannot isolate must report lossy_mapping."
+          "description": "v0.4. Where the tool body runs. `thread` (default) keeps v0.3 behavior: a timed-out synchronous body may keep running in the background and its result is discarded. `process` runs the body in a separate OS process (arguments and results must be JSON-serializable); when `timeout` expires the process is terminated so side effects stop. Valid without `timeout`. Targets that cannot isolate must report lossy_mapping."
         }
       }
     },
@@ -200,7 +200,7 @@
         "limits": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Draft 0.4. Per-invocation execution limits for the agent.",
+          "description": "v0.4. Per-invocation execution limits for the agent.",
           "properties": {
             "max_turns": {
               "type": "integer",
@@ -212,7 +212,7 @@
         "handoffs": {
           "type": "array",
           "uniqueItems": true,
-          "description": "Draft 0.4. Agents this agent may transfer control to during its run. The receiving agent continues the same conversation and its final output becomes the output of the step that invoked the original agent. Every key must be a defined agent and may not be the agent itself.",
+          "description": "v0.4. Agents this agent may transfer control to during its run. The receiving agent continues the same conversation and its final output becomes the output of the step that invoked the original agent. Every key must be a defined agent and may not be the agent itself.",
           "items": {
             "oneOf": [
               { "type": "string" },

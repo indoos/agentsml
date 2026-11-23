@@ -3,7 +3,7 @@ kind: AgentSystem
 metadata:
   name: support-triage
   version: 0.1.0
-  description: Draft 0.4 example with agent turn limits, handoffs and a process-isolated tool.
+  description: v0.4 example with agent turn limits, handoffs and a process-isolated tool.
 profiles:
   - agentsml-core
 models:

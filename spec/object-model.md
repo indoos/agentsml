@@ -167,12 +167,12 @@ Tool sources:
 
 - `reasoning` (object, no other keys): `effort` (`off`, `low`, `medium`, `high`), `budget_tokens` (integer >= 0) and `expose_trace` (boolean). Reasoning is provider-mapped: there is no framework-level primitive, so targets translate it to model-provider settings and must emit `lossy_mapping` for fields they cannot apply.
 
-### `agent` Additions in v0.4 (Draft)
+### `agent` Additions in v0.4
 
-- `limits` (object, no other keys): `max_turns` (integer >= 1) is the maximum number of model requests the agent may make in one invocation. See "Limits, handoffs and tool isolation (Draft 0.4)" in execution-semantics.md.
+- `limits` (object, no other keys): `max_turns` (integer >= 1) is the maximum number of model requests the agent may make in one invocation. See "Limits, handoffs and tool isolation (v0.4)" in execution-semantics.md.
 - `handoffs` (array, unique items): each item is an agent key string or an object `{agent, description?}`. Every referenced agent must be defined and an agent may not list itself. Handoff targets need not appear as workflow steps.
 
-### `tool` Additions in v0.4 (Draft)
+### `tool` Additions in v0.4
 
 - `isolation` (enum `thread`, `process`; default `thread`): where the tool body runs. `process` runs it in a separate OS process and terminates that process when `timeout` expires. Valid without `timeout`.
 

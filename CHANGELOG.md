@@ -2,16 +2,18 @@
 
 All notable changes to the AgentsML specification are recorded here.
 
-## Unreleased — Draft 0.4
+## 0.4.0 — 2026-11-23
 
-Additive and backward compatible; v0.3 documents validate unchanged. Schema: `schemas/v0.4/agentsml.schema.json`; the canonical schema also accepts `agentsml: "0.4"`. The reference compiler (`agentsml-impl`, unreleased) maps all three fields on its 15 code targets; other targets emit `lossy_mapping` where they cannot honour them.
+Specification version: `0.4.0`
+
+Additive and backward compatible; v0.3 documents validate unchanged. Schema: `schemas/v0.4/agentsml.schema.json`; the canonical schema also accepts `agentsml: "0.4"`. The reference compiler (`agentsml-impl` 0.4.0) maps all three fields on its 15 code targets; other targets emit `lossy_mapping` where they cannot honour them.
 
 ### Added
 
 - Agent `limits` object with `max_turns` (integer >= 1). Exceeding it fails the invocation with error kind `limit_exceeded`, which is not retried; step `fallback` applies.
 - Agent `handoffs`: array of agent keys or `{agent, description}` objects. The receiving agent continues the same conversation and its output becomes the step output. Referenced agents must be defined and may not be the agent itself.
 - Tool `isolation` (`thread` default, `process`): `process` runs the tool body in a separate OS process that is terminated when `timeout` expires.
-- Spec sections: object-model "Additions in v0.4 (Draft)", execution-semantics "Limits, handoffs and tool isolation (Draft 0.4)".
+- Spec sections: object-model "Additions in v0.4", execution-semantics "Limits, handoffs and tool isolation (v0.4)".
 - Example `examples/handoff-agent.agentsml.yaml`.
 
 ## 0.3.1 — 2026-11-18

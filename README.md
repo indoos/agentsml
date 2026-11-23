@@ -22,9 +22,9 @@ Specification version: `0.2.0`
 
 The canonical schema accepts both `0.1` and `0.2` documents.
 
-Version `0.3` (released 2026-11-17, additive) is the current version and is published under [schemas/v0.3](schemas/v0.3/agentsml.schema.json); the canonical schema also still accepts `0.1` and `0.2` documents. See [CHANGELOG.md](CHANGELOG.md) for its contents.
+Version `0.3` (released 2026-11-17, additive) is published under [schemas/v0.3](schemas/v0.3/agentsml.schema.json); the canonical schema also still accepts `0.1` and `0.2` documents. See [CHANGELOG.md](CHANGELOG.md) for its contents.
 
-Draft `0.4` (unreleased, additive) adds agent `limits` and `handoffs` and tool `isolation`; it is published under [schemas/v0.4](schemas/v0.4/agentsml.schema.json).
+Version `0.4` (released 2026-11-23, additive) is the current version: it adds agent `limits` and `handoffs` and tool `isolation`, and is published under [schemas/v0.4](schemas/v0.4/agentsml.schema.json). See [CHANGELOG.md](CHANGELOG.md) for its contents.
 
 What `0.2` provides:
 
@@ -53,7 +53,7 @@ Changelog:
 - [simple-agent.agentsml.yaml](examples/simple-agent.agentsml.yaml) — Minimal single-agent document.
 - [branching-agent.agentsml.yaml](examples/branching-agent.agentsml.yaml) — Draft 0.2: conditional edges, fan-out, and join.
 - [resilient-agent.agentsml.yaml](examples/resilient-agent.agentsml.yaml) — v0.3: step retry and timeout, agent reasoning, tool approval modes.
-- [handoff-agent.agentsml.yaml](examples/handoff-agent.agentsml.yaml) — Draft 0.4: agent turn limits, handoffs, process-isolated tool.
+- [handoff-agent.agentsml.yaml](examples/handoff-agent.agentsml.yaml) — v0.4: agent turn limits, handoffs, process-isolated tool.
 - [credit-risk-agent.agentsml.yaml](examples/credit-risk-agent.agentsml.yaml) — Multi-agent credit risk analysis workflow.
 - [fraud-detection-agent.agentsml.yaml](examples/fraud-detection-agent.agentsml.yaml) — Fraud investigation with human-in-the-loop approval.
 - [kyc-aml-investigation-agent.agentsml.yaml](examples/kyc-aml-investigation-agent.agentsml.yaml) — KYC/AML investigation pipeline.
